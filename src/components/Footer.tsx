@@ -18,6 +18,9 @@ export default function Footer() {
         </div>
 
         <p className="text-xs text-[#b4ab9b] mt-8">© {new Date().getFullYear()} Tonari</p>
+        <Link href="/admin" className="inline-block mt-3 text-xs text-[#c9bfa8] hover:text-teal underline underline-offset-2">
+          <Bi ja="管理者ログイン" en="Admin login" />
+        </Link>
       </div>
     </footer>
   );
