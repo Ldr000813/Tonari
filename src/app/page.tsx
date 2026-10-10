@@ -1,20 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Bi } from "@/lib/i18n";
-import HeroSlideshow from "@/components/HeroSlideshow";
+import HeroSlideshow, { HeroImage } from "@/components/HeroSlideshow";
 
 // Shown until the admin has uploaded photos (and as a fallback).
-const defaultHero = ["/events/e1.jpg", "/events/e2.jpg", "/events/e3.jpg", "/events/e4.jpg"];
+const defaultHero: HeroImage[] = [
+  { url: "/events/e1.jpg", pos: "50% 50%" },
+  { url: "/events/e2.jpg", pos: "50% 50%" },
+  { url: "/events/e3.jpg", pos: "50% 50%" },
+  { url: "/events/e4.jpg", pos: "50% 50%" },
+];
 
 const doing = [
-  { ic: "🎉", ja: ["イベントで出会う", "料理・お祭り・まち歩き。ひとりでも気軽に。"], en: ["Meet at events", "Cooking, festivals, town walks — come on your own."] },
-  { ic: "🍚", ja: ["ごはんを囲む", "同じ食卓で、肩の力を抜いて話す。"], en: ["Share a meal", "Around the same table, with the pressure off."] },
-  { ic: "🤝", ja: ["対等な友だちができる", "言語交換で終わらない、続く関係。"], en: ["Make real friends", "Not just language exchange — bonds that last."] },
-  { ic: "🏠", ja: ["この街の一員になる", "困ったとき、隣にいてくれる人ができる。"], en: ["Belong here", "Find people who are there when you need them."] },
+  { ic: "🎉", ja: ["集まって、遊ぶ", "芝生でピクニックしたり、料理したり、お祭りに行ったり。予定が合う日に、ふらっと来てください。"], en: ["Hang out", "Picnics on the grass, cooking together, heading to a festival. Just drop by when a date works for you."] },
+  { ic: "🍚", ja: ["ごはんを一緒に", "同じ鍋をつついていると、なぜか話せる。うまく話せなくても、ぜんぜん大丈夫です。"], en: ["Eat together", "Somehow, sharing the same pot gets people talking. It's fine if your Japanese (or English) is shaky."] },
+  { ic: "🤝", ja: ["ただの友だちになる", "「教える・教わる」じゃなくて、対等に。イベントが終わってからも、関係は続いていきます。"], en: ["Become real friends", "Not teacher and student — just equals. The friendships keep going long after the event ends."] },
+  { ic: "🏠", ja: ["この街になじむ", "「どこで買い物する?」みたいな小さなことを、気軽に聞ける人ができます。"], en: ["Get to know the town", "You'll have someone to ask the small stuff — like where to shop, or what that sign means."] },
 ];
 
 export default function Home() {
-  const [heroImages, setHeroImages] = useState<string[]>(defaultHero);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>(defaultHero);
   useEffect(() => {
     fetch("/api/hero", { cache: "no-store" })
       .then((r) => r.json())
@@ -66,8 +71,8 @@ export default function Home() {
 
       {/* what you can do */}
       <section className="section pt-0">
-        <h2 className="h2"><Bi ja="となりでできること" en="What you can do" /></h2>
-        <p className="lead"><Bi ja="気軽に、楽しく。難しいことは何もありません。" en="Easygoing and fun — nothing complicated." /></p>
+        <h2 className="h2"><Bi ja="となりでやっていること" en="What we actually do" /></h2>
+        <p className="lead"><Bi ja="むずかしく考えなくて大丈夫。楽しいから、また来たくなる。それだけです。" en="No need to overthink it. It's fun, so people come back. That's really all." /></p>
         <div className="grid sm:grid-cols-2 gap-4 mt-8">
           {doing.map((c, i) => (
             <div key={i} className="card">
@@ -84,15 +89,15 @@ export default function Home() {
         <h2 className="h2"><Bi ja="こんな人へ" en="Who it's for" /></h2>
         <div className="grid sm:grid-cols-2 gap-4 mt-8">
           <div className="rounded-3xl p-6 bg-[#FFF6DC] border border-[#F0DFA0]">
-            <h3 className="font-bold">🌏 <Bi ja="外国から来た方・留学生へ" en="International residents & students" /></h3>
+            <h3 className="font-bold">🌏 <Bi ja="外国から来た方・留学生へ" en="If you've come from abroad" /></h3>
             <p className="text-sm text-ink/80 mt-2">
-              <Bi ja="「日本にいるのに、入れていない」と感じるあなたへ。ここでは、一人の人として迎えられます。" en="For you who feel you're in Japan yet not quite 'in'. Here, you're welcomed as a person." />
+              <Bi ja="日本に住んでいるのに、どこか「お客さん」のまま。そんな感じがするなら、一度のぞいてみてください。ここでは外国人としてじゃなく、ただのあなたとして会えます。" en="Living in Japan, but still somehow a 'guest'? If that sounds familiar, come take a look. Here you're not 'the foreigner' — just you." />
             </p>
           </div>
           <div className="rounded-3xl p-6 bg-mint border border-mintline">
-            <h3 className="font-bold">🍵 <Bi ja="地域にお住まいの方へ" en="Local residents" /></h3>
+            <h3 className="font-bold">🍵 <Bi ja="地域にお住まいの方へ" en="If you live nearby" /></h3>
             <p className="text-sm text-ink/80 mt-2">
-              <Bi ja="海外の人と関わってみたいけど距離感がわからない方へ。自然に、対等に出会えます。" en="For you who'd like to connect with people from abroad but aren't sure how. Meet them naturally, as equals." />
+              <Bi ja="海外の人と話してみたいけど、きっかけがない。英語に自信がなくても平気です。身構えず、ふつうに友だちになれます。" en="Curious about people from other countries but never had the chance? No confidence in English needed. Just come as you are and make friends." />
             </p>
           </div>
         </div>

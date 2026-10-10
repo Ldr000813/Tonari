@@ -1,8 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// Cross-fading hero background of past event photos (fade out / fade in + slow zoom).
-export default function HeroSlideshow({ images, interval = 5000 }: { images: string[]; interval?: number }) {
+export type HeroImage = { url: string; pos: string };
+
+// Cross-fading hero background of past event photos (fade out / fade in + slow
+// zoom). Each image is cropped around its admin-chosen focal point (pos).
+export default function HeroSlideshow({ images, interval = 5000 }: { images: HeroImage[]; interval?: number }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (images.length <= 1) return;
@@ -12,14 +15,19 @@ export default function HeroSlideshow({ images, interval = 5000 }: { images: str
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-ink" aria-hidden="true">
-      {images.map((src, idx) => (
+      {images.map((img, idx) => (
         <div
-          key={src}
+          key={img.url}
           className="absolute inset-0 transition-opacity duration-[1600ms] ease-in-out"
           style={{ opacity: idx === i ? 1 : 0 }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="" className="w-full h-full object-cover kenburns" />
+          <img
+            src={img.url}
+            alt=""
+            className="w-full h-full object-cover kenburns"
+            style={{ objectPosition: img.pos }}
+          />
         </div>
       ))}
     </div>
