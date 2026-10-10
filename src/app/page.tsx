@@ -1,8 +1,10 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Bi } from "@/lib/i18n";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
-const heroImages = ["/events/e1.jpg", "/events/e2.jpg", "/events/e3.jpg", "/events/e4.jpg"];
+// Shown until the admin has uploaded photos (and as a fallback).
+const defaultHero = ["/events/e1.jpg", "/events/e2.jpg", "/events/e3.jpg", "/events/e4.jpg"];
 
 const doing = [
   { ic: "🎉", ja: ["イベントで出会う", "料理・お祭り・まち歩き。ひとりでも気軽に。"], en: ["Meet at events", "Cooking, festivals, town walks — come on your own."] },
@@ -12,6 +14,14 @@ const doing = [
 ];
 
 export default function Home() {
+  const [heroImages, setHeroImages] = useState<string[]>(defaultHero);
+  useEffect(() => {
+    fetch("/api/hero", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => { if (Array.isArray(j.images) && j.images.length) setHeroImages(j.images); })
+      .catch(() => {});
+  }, []);
+
   return (
     <>
       {/* hero: flowing past-event photos + overlay */}
