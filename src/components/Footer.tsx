@@ -2,8 +2,6 @@
 import Link from "next/link";
 import { Bi } from "@/lib/i18n";
 
-const APP_URL = "https://stamp-app-two.vercel.app";
-
 export default function Footer() {
   return (
     <footer className="mt-10 border-t border-line bg-cream">
@@ -17,9 +15,6 @@ export default function Footer() {
           <Link href="/about" className="hover:text-teal"><Bi ja="となりとは" en="About" /></Link>
           <Link href="/events" className="hover:text-teal"><Bi ja="イベント" en="Events" /></Link>
           <Link href="/join" className="hover:text-teal"><Bi ja="参加する" en="Join" /></Link>
-          <a href={APP_URL} target="_blank" rel="noreferrer" className="hover:text-teal">
-            <Bi ja="スタンプラリー" en="Stamp Rally" />
-          </a>
         </div>
 
         <p className="text-xs text-[#b4ab9b] mt-8">© {new Date().getFullYear()} Tonari</p>

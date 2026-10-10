@@ -1,11 +1,9 @@
 "use client";
 import { Bi } from "@/lib/i18n";
 
-const APP_URL = "https://stamp-app-two.vercel.app";
-
 const doing = [
   { ic: "🎉", ja: ["イベントで出会う", "料理・お祭り・まち歩き。ひとりでも気軽に。"], en: ["Meet at events", "Cooking, festivals, town walks — come on your own."] },
-  { ic: "🎫", ja: ["スタンプラリーでまちを巡る", "お店やスポットを巡って特典をゲット。"], en: ["Explore with a stamp rally", "Visit shops and spots, earn coupons."] },
+  { ic: "🍚", ja: ["ごはんを囲む", "同じ食卓で、肩の力を抜いて話す。"], en: ["Share a meal", "Around the same table, with the pressure off."] },
   { ic: "🤝", ja: ["対等な友だちができる", "言語交換で終わらない、続く関係。"], en: ["Make real friends", "Not just language exchange — bonds that last."] },
   { ic: "🏠", ja: ["この街の一員になる", "困ったとき、隣にいてくれる人ができる。"], en: ["Belong here", "Find people who are there when you need them."] },
 ];
@@ -29,10 +27,10 @@ export default function Home() {
           />
         </p>
         <div className="flex flex-wrap gap-3 justify-center mt-8 relative z-10">
-          <a href={APP_URL} target="_blank" rel="noreferrer" className="btn btn-primary">
-            🎫 <Bi ja="アプリを開く" en="Open the app" />
+          <a href="/join" className="btn btn-primary">
+            <Bi ja="参加する" en="Join us" />
           </a>
-          <a href="/join" className="btn btn-ghost"><Bi ja="参加のしかた" en="How to join" /></a>
+          <a href="/about" className="btn btn-ghost"><Bi ja="となりとは" en="About" /></a>
         </div>
       </section>
 
@@ -94,8 +92,8 @@ export default function Home() {
           <p className="text-ink/80 max-w-md mx-auto mt-2 mb-6">
             <Bi ja="あなたの“最初の隣人”が、ここで見つかります。" en="Your first neighbor in this town is waiting here." />
           </p>
-          <a href={APP_URL} target="_blank" rel="noreferrer" className="btn btn-primary">
-            🎫 <Bi ja="アプリを開いて始める" en="Open the app & start" />
+          <a href="/join" className="btn btn-primary">
+            <Bi ja="参加する" en="Join us" />
           </a>
         </div>
       </section>

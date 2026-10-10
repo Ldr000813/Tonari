@@ -1,28 +1,28 @@
 "use client";
 import { Bi } from "@/lib/i18n";
 
-// ▼ ここに実際のリンクを入れてください（未設定なら # のまま非表示扱い）
+// ▼ ここに実際のリンクを入れてください（空なら自動で非表示）
 const LINKS = {
   line: "",              // 例: https://line.me/ti/g/xxxxx
   instagram: "",         // 例: https://instagram.com/xxxx
-  app: "https://stamp-app-two.vercel.app",
   contactEmail: "",      // 例: tonari@example.com
 };
 
 const steps = [
-  { ja: ["アプリを開く", "登録なし・無料。QRを読むだけで始まります。"], en: ["Open the app", "No sign-up, free — just scan a QR to begin."] },
-  { ja: ["イベントに参加 or まちを巡る", "気になるイベントへ。お店やスポットも巡れます。"], en: ["Join an event or explore the town", "Join any event, or visit shops and spots."] },
-  { ja: ["スタンプを集める", "特典（クーポン）と、新しいつながりをゲット。"], en: ["Collect stamps", "Earn coupons — and new connections."] },
+  { ja: ["SNS・LINEでつながる", "最新のイベント情報は、SNSやLINEでお知らせします。"], en: ["Follow us", "We post event news on social media and LINE."] },
+  { ja: ["イベントに来てみる", "気になる回に、ひとりでも、ふらっとどうぞ。"], en: ["Come to an event", "Drop by any gathering — even on your own."] },
+  { ja: ["顔を出して、となりに", "一度来たら、もうあなたも“となり”です。"], en: ["Just show up", "Once you come, you're already a neighbor."] },
 ];
 
 export default function Join() {
+  const hasLinks = LINKS.line || LINKS.instagram;
   return (
     <section className="section">
       <h1 className="text-3xl sm:text-4xl font-black text-ink text-center">
         <Bi ja="参加する" en="Join Tonari" />
       </h1>
       <p className="lead mt-3">
-        <Bi ja="登録なし・無料。だれでも、ひとりでも歓迎です。" en="No sign-up, free. Everyone's welcome — even on your own." />
+        <Bi ja="費用なし・予約なし。だれでも、ひとりでも歓迎です。" en="No fee, no booking. Everyone's welcome — even on your own." />
       </p>
 
       <div className="mt-10 max-w-xl mx-auto space-y-4">
@@ -37,21 +37,20 @@ export default function Join() {
         ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap gap-3 justify-center">
-        <a href={LINKS.app} target="_blank" rel="noreferrer" className="btn btn-primary">
-          🎫 <Bi ja="アプリを開く" en="Open the app" />
-        </a>
-        {LINKS.line && (
-          <a href={LINKS.line} target="_blank" rel="noreferrer" className="btn btn-ghost">
-            💬 <Bi ja="LINEグループに参加" en="Join our LINE" />
-          </a>
-        )}
-        {LINKS.instagram && (
-          <a href={LINKS.instagram} target="_blank" rel="noreferrer" className="btn btn-ghost">
-            📷 Instagram
-          </a>
-        )}
-      </div>
+      {hasLinks && (
+        <div className="mt-10 flex flex-wrap gap-3 justify-center">
+          {LINKS.line && (
+            <a href={LINKS.line} target="_blank" rel="noreferrer" className="btn btn-primary">
+              💬 <Bi ja="LINEグループに参加" en="Join our LINE" />
+            </a>
+          )}
+          {LINKS.instagram && (
+            <a href={LINKS.instagram} target="_blank" rel="noreferrer" className="btn btn-ghost">
+              📷 Instagram
+            </a>
+          )}
+        </div>
+      )}
 
       {LINKS.contactEmail && (
         <p className="text-center text-sm text-[#8a8378] mt-8">

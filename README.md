@@ -13,7 +13,7 @@ npm run dev     # http://localhost:3000
 
 - `src/app/page.tsx` … ホーム（ヒーロー・できること・こんな人へ）
 - `src/app/about/page.tsx` … となりとは（課題・相互メリット・機能・ビジョン）
-- `src/app/events/page.tsx` … イベント（**スタンプアプリと同じSupabaseから自動取得**）
+- `src/app/events/page.tsx` … イベント（`EVENTS` 配列に手で追加）
 - `src/app/join/page.tsx` … 参加する（手順・各種リンク）
 - `src/components/Nav.tsx` / `Footer.tsx` … 共通ヘッダー・フッター
 - `src/lib/i18n.tsx` … 日英切替（`<Bi ja="…" en="…" />` で文章を書く）
@@ -22,7 +22,7 @@ npm run dev     # http://localhost:3000
 
 - **リンク設定**：`src/app/join/page.tsx` 上部の `LINKS`（LINE・Instagram・問い合わせ）。
 - **文章**：各ページの `<Bi ja="日本語" en="English" />`。
-- **イベント**：手動更新は不要。スタンプアプリ側でイベントを登録すると、ここに自動表示されます。
+- **イベント**：`src/app/events/page.tsx` の `EVENTS` 配列に追加（新しいものを上に）。
 
 ## デプロイ（Vercel）
 
