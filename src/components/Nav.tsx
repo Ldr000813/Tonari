@@ -11,7 +11,6 @@ const links = [
 ];
 
 export default function Nav() {
-  const { lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-50 bg-cream/90 backdrop-blur border-b border-line">
@@ -31,9 +30,7 @@ export default function Nav() {
               <Bi ja={l.ja} en={l.en} />
             </Link>
           ))}
-          <button onClick={() => setLang(lang === "ja" ? "en" : "ja")} className="text-xs rounded-full border border-[#e4dcc8] px-3 py-1 font-bold">
-            {lang === "ja" ? "English" : "日本語"}
-          </button>
+          <LangSwitch />
         </div>
 
         <button className="sm:hidden text-2xl" aria-label="menu" onClick={() => setOpen((v) => !v)}>
@@ -48,11 +45,23 @@ export default function Nav() {
               <Bi ja={l.ja} en={l.en} />
             </Link>
           ))}
-          <button onClick={() => { setLang(lang === "ja" ? "en" : "ja"); }} className="mt-1 text-xs rounded-full border border-[#e4dcc8] px-3 py-1 font-bold">
-            {lang === "ja" ? "English" : "日本語"}
-          </button>
+          <div className="pt-1"><LangSwitch /></div>
         </div>
       )}
     </header>
+  );
+}
+
+function LangSwitch() {
+  const { lang, setLang } = useLang();
+  const cell = "px-3 py-1.5 text-xs font-extrabold transition-colors";
+  return (
+    <div className="inline-flex items-center rounded-full border-2 border-teal overflow-hidden shadow-sm" role="group" aria-label="Language">
+      <span className="pl-2.5 pr-1 text-teal text-xs" aria-hidden="true">🌐</span>
+      <button onClick={() => setLang("ja")} aria-pressed={lang === "ja"}
+        className={cell + (lang === "ja" ? " bg-teal text-white" : " bg-white text-teal hover:bg-mint")}>日本語</button>
+      <button onClick={() => setLang("en")} aria-pressed={lang === "en"}
+        className={cell + (lang === "en" ? " bg-teal text-white" : " bg-white text-teal hover:bg-mint")}>EN</button>
+    </div>
   );
 }
