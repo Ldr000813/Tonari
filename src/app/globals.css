@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #FBF7EE;
+  color: #3f3a33;
+  font-family: -apple-system, "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "Segoe UI", sans-serif;
+  line-height: 1.75;
+}
+
+/* soft rounded buttons / cards reused across pages */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold px-6 py-3 transition-transform active:scale-95;
+  }
+  .btn-primary { @apply bg-ink text-white shadow-md; }
+  .btn-ghost { @apply bg-white text-ink border border-[#e4dcc8]; }
+  .section { @apply max-w-4xl mx-auto px-5 py-14; }
+  .card { @apply bg-white border border-line rounded-3xl p-6 shadow-sm; }
+  .h2 { @apply text-2xl sm:text-3xl font-extrabold text-teal text-center; }
+  .lead { @apply text-center text-[#8a8378] max-w-xl mx-auto mt-2; }
+}
