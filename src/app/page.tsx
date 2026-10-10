@@ -1,5 +1,8 @@
 "use client";
 import { Bi } from "@/lib/i18n";
+import HeroSlideshow from "@/components/HeroSlideshow";
+
+const heroImages = ["/events/e1.jpg", "/events/e2.jpg", "/events/e3.jpg", "/events/e4.jpg"];
 
 const doing = [
   { ic: "🎉", ja: ["イベントで出会う", "料理・お祭り・まち歩き。ひとりでも気軽に。"], en: ["Meet at events", "Cooking, festivals, town walks — come on your own."] },
@@ -11,26 +14,28 @@ const doing = [
 export default function Home() {
   return (
     <>
-      {/* hero */}
-      <section className="relative text-center px-5 pt-16 pb-20 overflow-hidden"
-        style={{ background: "linear-gradient(160deg,#FCE8B2 0%,#F6C64B 45%,#BFE8DF 120%)" }}>
-        <span className="inline-block bg-white text-teal font-bold text-xs rounded-full px-4 py-1.5 shadow-sm">
-          <Bi ja="多文化共生コミュニティ" en="Multicultural Community" />
-        </span>
-        <h1 className="text-4xl sm:text-6xl font-black text-ink mt-5 leading-tight">
-          <Bi ja="海の向こうも、となりだった。" en="Even across the sea, we're neighbors." />
-        </h1>
-        <p className="max-w-xl mx-auto mt-4 text-ink/80 font-medium">
-          <Bi
-            ja="在日外国人・留学生と、地域の人が“半々・対等”に出会う場所。国がちがっても、人として、となりあう。"
-            en="Where international residents, students and locals meet — half and half, as equals."
-          />
-        </p>
-        <div className="flex flex-wrap gap-3 justify-center mt-8 relative z-10">
-          <a href="/join" className="btn btn-primary">
-            <Bi ja="参加する" en="Join us" />
-          </a>
-          <a href="/about" className="btn btn-ghost"><Bi ja="となりとは" en="About" /></a>
+      {/* hero: flowing past-event photos + overlay */}
+      <section className="relative h-[72vh] min-h-[460px] flex items-center justify-center text-center overflow-hidden">
+        <HeroSlideshow images={heroImages} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/55" />
+        <div className="relative z-10 px-5 max-w-2xl">
+          <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight drop-shadow">
+            <Bi ja="海の向こうも、となりだった。" en="Even across the sea, we're neighbors." />
+          </h1>
+          <p className="max-w-xl mx-auto mt-4 text-white/90 font-medium drop-shadow">
+            <Bi
+              ja="在日外国人・留学生と、地域の人が“半々・対等”に出会う場所。国がちがっても、人として、となりあう。"
+              en="Where international residents, students and locals meet — half and half, as equals."
+            />
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center mt-8">
+            <a href="/join" className="btn bg-yellow text-ink shadow-lg">
+              <Bi ja="参加する" en="Join us" />
+            </a>
+            <a href="/about" className="btn bg-white/15 text-white border border-white/60 backdrop-blur">
+              <Bi ja="となりとは" en="About" />
+            </a>
+          </div>
         </div>
       </section>
 

@@ -14,6 +14,11 @@ body {
   line-height: 1.75;
 }
 
+/* slow "Ken Burns" zoom so the hero photos feel like they're flowing */
+.kenburns { animation: kb 14s ease-in-out infinite alternate; transform-origin: center; }
+@keyframes kb { from { transform: scale(1); } to { transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .kenburns { animation: none; } }
+
 /* soft rounded buttons / cards reused across pages */
 @layer components {
   .btn {
