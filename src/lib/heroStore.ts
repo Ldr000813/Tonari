@@ -31,7 +31,6 @@ export async function writePositions(map: PosMap): Promise<void> {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
-    allowOverwrite: true,
   });
 }
 
