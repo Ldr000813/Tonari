@@ -41,12 +41,14 @@ function Ico({ name }: { name: string }) {
 }
 
 export default function Home() {
-  const [heroImages, setHeroImages] = useState<HeroImage[]>(defaultHero);
+  // Start empty (dark hero) and only show photos once we know what to display —
+  // this avoids briefly flashing the bundled fallback before the admin photos load.
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   useEffect(() => {
     fetch("/api/hero", { cache: "no-store" })
       .then((r) => r.json())
-      .then((j) => { if (Array.isArray(j.images) && j.images.length) setHeroImages(j.images); })
-      .catch(() => {});
+      .then((j) => setHeroImages(Array.isArray(j.images) && j.images.length ? j.images : defaultHero))
+      .catch(() => setHeroImages(defaultHero));
   }, []);
 
   return (
