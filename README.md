@@ -13,7 +13,8 @@ npm run dev     # http://localhost:3000
 
 - `src/app/page.tsx` … ホーム（ヒーロー・できること・こんな人へ）
 - `src/app/about/page.tsx` … となりとは（課題・相互メリット・機能・ビジョン）
-- `src/app/events/page.tsx` … イベント（`EVENTS` 配列に手で追加）
+- `src/app/events/page.tsx` … イベント（内容は `/admin` の「イベント」タブで管理）
+- `src/app/gallery/page.tsx` … 活動のようす（写真は `/admin` の「活動のようす」タブで管理）
 - `src/app/join/page.tsx` … 参加する（手順・各種リンク）
 - `src/components/Nav.tsx` / `Footer.tsx` … 共通ヘッダー・フッター
 - `src/lib/i18n.tsx` … 日英切替（`<Bi ja="…" en="…" />` で文章を書く）
@@ -22,13 +23,17 @@ npm run dev     # http://localhost:3000
 
 - **リンク設定**：`src/app/join/page.tsx` 上部の `LINKS`（LINE・Instagram・問い合わせ）。
 - **文章**：各ページの `<Bi ja="日本語" en="English" />`。
-- **イベント**：`src/app/events/page.tsx` の `EVENTS` 配列に追加（新しいものを上に）。
+- **イベント・ギャラリー・ホーム写真**：コードではなく `/admin`（管理画面）から追加・編集。
 
-## 管理画面（ホーム写真の管理）
+## 管理画面（/admin）
 
 - URL：`/admin`（例：https://あなたのサイト/admin）
 - ログイン：環境変数 **`ADMIN_PASSWORD`** のパスワードを入力。
-- できること：ホーム最上部スライドショーの**写真を追加・削除**。写真は Vercel Blob に保存され、ホームに自動反映されます（未登録の間は `public/events/` の初期写真を表示）。
+- タブは3つ：
+  - **ホーム写真**：最上部スライドショーの写真を追加・削除。写真ごとに「中心に映したい場所（焦点）」をクリック／ドラッグで指定でき、ホームでの見え方プレビュー付き。
+  - **活動のようす**：ギャラリーページ（`/gallery`）の写真を追加・削除（複数まとめて選択可）。
+  - **イベント**：イベントページ（`/events`）の内容を追加・編集・削除（日時・場所・説明を日英で入力。英語が空なら日本語を表示）。
+- データは Vercel Blob に保存され、各ページに自動反映されます（未登録の間は、ホームは `public/events/` の初期写真、イベント・ギャラリーは「準備中」を表示）。
 
 ### 必要な環境変数（Vercel → Settings → Environment Variables）
 

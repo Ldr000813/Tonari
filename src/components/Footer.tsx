@@ -14,6 +14,7 @@ export default function Footer() {
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6 text-sm font-bold text-ink/80">
           <Link href="/about" className="hover:text-teal"><Bi ja="となりとは" en="About" /></Link>
           <Link href="/events" className="hover:text-teal"><Bi ja="イベント" en="Events" /></Link>
+          <Link href="/gallery" className="hover:text-teal"><Bi ja="活動のようす" en="Gallery" /></Link>
           <Link href="/join" className="hover:text-teal"><Bi ja="参加する" en="Join" /></Link>
         </div>
 

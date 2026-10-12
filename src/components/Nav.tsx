@@ -7,6 +7,7 @@ const links = [
   { href: "/", ja: "ホーム", en: "Home" },
   { href: "/about", ja: "となりとは", en: "About" },
   { href: "/events", ja: "イベント", en: "Events" },
+  { href: "/gallery", ja: "活動のようす", en: "Gallery" },
   { href: "/join", ja: "参加する", en: "Join" },
 ];
 
@@ -33,9 +34,12 @@ export default function Nav() {
           <LangSwitch />
         </div>
 
-        <button className="sm:hidden text-2xl" aria-label="menu" onClick={() => setOpen((v) => !v)}>
-          {open ? "✕" : "☰"}
-        </button>
+        <div className="sm:hidden flex items-center gap-3">
+          <LangSwitch />
+          <button className="text-2xl leading-none" aria-label="menu" onClick={() => setOpen((v) => !v)}>
+            {open ? "✕" : "☰"}
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -45,7 +49,6 @@ export default function Nav() {
               <Bi ja={l.ja} en={l.en} />
             </Link>
           ))}
-          <div className="pt-1"><LangSwitch /></div>
         </div>
       )}
     </header>
