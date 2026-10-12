@@ -1,13 +1,6 @@
 "use client";
 import { Bi } from "@/lib/i18n";
 
-const funcs = [
-  { ja: ["出会う・体験する", "国も立場もちがう人と、対等に出会う。"], en: ["Meet & experience", "Meet people of all backgrounds, as equals."] },
-  { ja: ["学ぶ", "交流の自然な結果として、語学と相互理解が育つ。"], en: ["Learn", "Language and understanding grow through real connection."] },
-  { ja: ["働く", "外国人には仕事を、地域には“定着する人材”を。"], en: ["Work", "Jobs for newcomers, lasting talent for the community."] },
-  { ja: ["相談する", "住む・契約・制度など、暮らしの困りごとを解決。"], en: ["Get support", "Help with housing, contracts and daily life."] },
-];
-
 export default function About() {
   return (
     <>
@@ -47,20 +40,6 @@ export default function About() {
             <h3 className="font-bold mb-2"><Bi ja="地域の人にとって" en="For locals" /></h3>
             <p className="text-sm text-ink/80"><Bi ja="身近に世界とつながれて視野が広がり、人手不足の解消や地域の国際化にもつながる。" en="A wider view of the world close to home — and help with labor shortages and local vibrancy." /></p>
           </div>
-        </div>
-      </section>
-
-      {/* staged functions */}
-      <section className="section pt-0">
-        <h2 className="h2"><Bi ja="出会うから、暮らしまで" en="From meeting to living" /></h2>
-        <p className="lead"><Bi ja="コミュニティを入口に、少しずつ機能を広げていきます。" en="Starting from community, we grow step by step." /></p>
-        <div className="grid sm:grid-cols-2 gap-4 mt-8">
-          {funcs.map((f, i) => (
-            <div key={i} className="card">
-              <h3 className="font-bold text-teal"><Bi ja={f.ja[0]} en={f.en[0]} /></h3>
-              <p className="text-sm text-ink/70 mt-1"><Bi ja={f.ja[1]} en={f.en[1]} /></p>
-            </div>
-          ))}
         </div>
       </section>
 
