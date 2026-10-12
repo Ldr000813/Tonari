@@ -1,12 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { prepareImage } from "@/lib/imagePrep";
+import { evStatus } from "@/lib/eventStatus";
 
 const PW_KEY = "tonari_admin_pw";
 
 type Img = { url: string; pathname: string; x?: number; y?: number };
 type EvText = { title: string; place: string; desc: string; fee: string };
-type Ev = { id: string; date: string; deadline: string; image: string; ja: EvText; en: EvText };
+type Ev = {
+  id: string; date: string; deadline: string;
+  startDate: string; deadlineDate: string; paused: boolean;
+  image: string; ja: EvText; en: EvText;
+};
 
 type Tab = "hero" | "gallery" | "events";
 
@@ -275,7 +280,7 @@ function GalleryPanel({ pw }: { pw: string }) {
 /* ---------------- Events ---------------- */
 
 const emptyEv = (): Ev => ({
-  id: "", date: "", deadline: "", image: "",
+  id: "", date: "", deadline: "", startDate: "", deadlineDate: "", paused: false, image: "",
   ja: { title: "", place: "", desc: "", fee: "" },
   en: { title: "", place: "", desc: "", fee: "" },
 });
@@ -331,15 +336,32 @@ function EventsPanel({ pw }: { pw: string }) {
         <p className="text-[#a29a8c] text-sm">まだイベントがありません。上のフォームから追加してください。（未登録の間は、ページに「準備中」と表示されます）</p>
       ) : (
         <div className="space-y-4">
-          {events.map((e) => (
-            <div key={e.id} className="card">
-              <EvFields ev={e} pw={pw} onChange={(patch) => patchLocal(e.id, patch)} />
-              <div className="flex items-center gap-3 mt-3">
-                <button onClick={() => save(e)} disabled={busy} className="btn btn-primary text-sm py-2">保存</button>
-                <button onClick={() => remove(e.id)} disabled={busy} className="ml-auto text-sm text-rose-600 underline">削除</button>
+          {events.map((e) => {
+            const st = evStatus(e);
+            const badge = e.paused
+              ? { t: "一時停止中", c: "bg-[#FDE8C8] text-[#9a6b12]" }
+              : st.hidden
+              ? { t: "期限切れ（自動非表示）", c: "bg-[#EFE7D6] text-[#8a8378]" }
+              : st.closed
+              ? { t: "締め切り済み", c: "bg-[#FADCDC] text-[#b4474a]" }
+              : { t: "公開中", c: "bg-mint text-teal" };
+            return (
+              <div key={e.id} className="card">
+                <div className="flex items-center justify-between mb-3">
+                  <span className={"inline-flex items-center rounded-full text-xs font-bold px-2.5 py-1 " + badge.c}>{badge.t}</span>
+                  <button onClick={() => { patchLocal(e.id, { paused: !e.paused }); save(mergeEv(e, { paused: !e.paused })); }}
+                    disabled={busy} className="text-xs font-bold text-teal underline">
+                    {e.paused ? "▶ 再開する" : "⏸ 一時停止する"}
+                  </button>
+                </div>
+                <EvFields ev={e} pw={pw} onChange={(patch) => patchLocal(e.id, patch)} />
+                <div className="flex items-center gap-3 mt-3">
+                  <button onClick={() => save(e)} disabled={busy} className="btn btn-primary text-sm py-2">保存</button>
+                  <button onClick={() => remove(e.id)} disabled={busy} className="ml-auto text-sm text-rose-600 underline">削除</button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {msg && <p className="text-teal text-sm mt-4">{msg}</p>}
@@ -352,6 +374,9 @@ function mergeEv(e: Ev, patch: any): Ev {
     ...e,
     ...("date" in patch ? { date: patch.date } : {}),
     ...("deadline" in patch ? { deadline: patch.deadline } : {}),
+    ...("startDate" in patch ? { startDate: patch.startDate } : {}),
+    ...("deadlineDate" in patch ? { deadlineDate: patch.deadlineDate } : {}),
+    ...("paused" in patch ? { paused: patch.paused } : {}),
     ...("image" in patch ? { image: patch.image } : {}),
     ja: patch.ja ? { ...e.ja, ...patch.ja } : e.ja,
     en: patch.en ? { ...e.en, ...patch.en } : e.en,
@@ -380,6 +405,12 @@ function EvFields({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (patch: 
 
   return (
     <div className="space-y-3">
+      {/* pause toggle */}
+      <label className="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" checked={!!ev.paused} onChange={(e) => onChange({ paused: e.target.checked })} className="w-4 h-4 accent-teal" />
+        <span className="text-sm font-bold text-ink">一時停止（チェックすると公開ページに表示されません）</span>
+      </label>
+
       {/* image */}
       <div>
         <label className="text-xs font-bold text-ink/70">イベント画像（任意）</label>
@@ -403,12 +434,25 @@ function EvFields({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (patch: 
 
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-bold text-ink/70">日時（表示用の文字列）</label>
-          <input className={inp} placeholder="例: 10/17 (金) 13:00" value={ev.date} onChange={(e) => onChange({ date: e.target.value })} />
+          <label className="text-xs font-bold text-ink/70">開催日</label>
+          <input type="date" className={inp} value={ev.startDate} onChange={(e) => onChange({ startDate: e.target.value })} />
         </div>
         <div>
-          <label className="text-xs font-bold text-ink/70">応募締め切り（任意）</label>
-          <input className={inp} placeholder="例: 10/15 (水) まで" value={ev.deadline} onChange={(e) => onChange({ deadline: e.target.value })} />
+          <label className="text-xs font-bold text-ink/70">応募締め切り</label>
+          <input type="date" className={inp} value={ev.deadlineDate} onChange={(e) => onChange({ deadlineDate: e.target.value })} />
+        </div>
+      </div>
+      <p className="text-[11px] text-[#8a8378] -mt-1">
+        ※ 日付を入れると、締切・開催日を過ぎたら「締め切りました」と表示し、<b>1週間後に自動で非表示</b>になります。日付を空にすると自動では消えません。
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-bold text-ink/70">日時ラベル（任意・上書き）</label>
+          <input className={inp} placeholder="例: 10/17 (金) 13:00〜" value={ev.date} onChange={(e) => onChange({ date: e.target.value })} />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-ink/70">締切ラベル（任意・上書き）</label>
+          <input className={inp} placeholder="例: 10/15 (水) 23:59" value={ev.deadline} onChange={(e) => onChange({ deadline: e.target.value })} />
         </div>
       </div>
 

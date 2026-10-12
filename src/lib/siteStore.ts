@@ -11,7 +11,17 @@ export async function listByPrefix(prefix: string) {
 const EVENTS_PATH = "site-meta/events.json";
 
 export type EvText = { title: string; place: string; desc: string; fee: string };
-export type Ev = { id: string; date: string; deadline: string; image: string; ja: EvText; en: EvText };
+export type Ev = {
+  id: string;
+  date: string;         // 表示用ラベル（任意・上書き）
+  deadline: string;     // 表示用ラベル（任意・上書き）
+  startDate: string;    // 開催日 "YYYY-MM-DD"（自動非表示などに使用）
+  deadlineDate: string; // 応募締め切り "YYYY-MM-DD"
+  paused: boolean;      // 一時停止（公開ページに出さない）
+  image: string;
+  ja: EvText;
+  en: EvText;
+};
 
 export async function readEvents(): Promise<Ev[]> {
   try {
@@ -30,6 +40,9 @@ export async function readEvents(): Promise<Ev[]> {
       id: String(e?.id ?? ""),
       date: e?.date ?? "",
       deadline: e?.deadline ?? "",
+      startDate: e?.startDate ?? "",
+      deadlineDate: e?.deadlineDate ?? "",
+      paused: !!e?.paused,
       image: e?.image ?? "",
       ja: txt(e?.ja), en: txt(e?.en),
     }));
