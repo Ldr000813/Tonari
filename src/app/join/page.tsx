@@ -1,12 +1,6 @@
 "use client";
 import { Bi } from "@/lib/i18n";
-
-// ▼ リンク設定（空なら自動で非表示）
-const LINKS = {
-  lineOpenChat: "https://line.me/ti/g2/WkLDprTxGsN5DOolD9eDwdhbH4iRbMYrJixBPA?utm_source=invitation&utm_medium=link_copy&utm_campaign=default",
-  instagram: "",         // 例: https://instagram.com/xxxx
-  contactEmail: "",      // 例: tonari@example.com
-};
+import { LINKS } from "@/lib/links";
 
 const steps = [
   { ja: ["SNS・LINEでつながる", "最新のイベント情報は、SNSやLINEでお知らせします。"], en: ["Follow us", "We post event news on social media and LINE."] },

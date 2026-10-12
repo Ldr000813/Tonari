@@ -5,8 +5,8 @@ import { prepareImage } from "@/lib/imagePrep";
 const PW_KEY = "tonari_admin_pw";
 
 type Img = { url: string; pathname: string; x?: number; y?: number };
-type EvText = { title: string; place: string; desc: string };
-type Ev = { id: string; date: string; ja: EvText; en: EvText };
+type EvText = { title: string; place: string; desc: string; fee: string };
+type Ev = { id: string; date: string; deadline: string; image: string; ja: EvText; en: EvText };
 
 type Tab = "hero" | "gallery" | "events";
 
@@ -274,7 +274,11 @@ function GalleryPanel({ pw }: { pw: string }) {
 
 /* ---------------- Events ---------------- */
 
-const emptyEv = (): Ev => ({ id: "", date: "", ja: { title: "", place: "", desc: "" }, en: { title: "", place: "", desc: "" } });
+const emptyEv = (): Ev => ({
+  id: "", date: "", deadline: "", image: "",
+  ja: { title: "", place: "", desc: "", fee: "" },
+  en: { title: "", place: "", desc: "", fee: "" },
+});
 
 function EventsPanel({ pw }: { pw: string }) {
   const [events, setEvents] = useState<Ev[]>([]);
@@ -318,7 +322,7 @@ function EventsPanel({ pw }: { pw: string }) {
     <div>
       <div className="card mb-6">
         <p className="font-bold text-ink mb-3">イベントを追加</p>
-        <EvFields ev={draft} onChange={(patch) => setDraft((d) => mergeEv(d, patch))} />
+        <EvFields ev={draft} pw={pw} onChange={(patch) => setDraft((d) => mergeEv(d, patch))} />
         <button onClick={add} disabled={busy} className="btn btn-primary text-sm py-2 mt-3">追加する</button>
       </div>
 
@@ -329,7 +333,7 @@ function EventsPanel({ pw }: { pw: string }) {
         <div className="space-y-4">
           {events.map((e) => (
             <div key={e.id} className="card">
-              <EvFields ev={e} onChange={(patch) => patchLocal(e.id, patch)} />
+              <EvFields ev={e} pw={pw} onChange={(patch) => patchLocal(e.id, patch)} />
               <div className="flex items-center gap-3 mt-3">
                 <button onClick={() => save(e)} disabled={busy} className="btn btn-primary text-sm py-2">保存</button>
                 <button onClick={() => remove(e.id)} disabled={busy} className="ml-auto text-sm text-rose-600 underline">削除</button>
@@ -347,30 +351,80 @@ function mergeEv(e: Ev, patch: any): Ev {
   return {
     ...e,
     ...("date" in patch ? { date: patch.date } : {}),
+    ...("deadline" in patch ? { deadline: patch.deadline } : {}),
+    ...("image" in patch ? { image: patch.image } : {}),
     ja: patch.ja ? { ...e.ja, ...patch.ja } : e.ja,
     en: patch.en ? { ...e.en, ...patch.en } : e.en,
   };
 }
 
-function EvFields({ ev, onChange }: { ev: Ev; onChange: (patch: any) => void }) {
+function EvFields({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (patch: any) => void }) {
   const inp = "w-full border border-line rounded-lg p-2 text-sm";
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function pickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.files?.[0]; if (!raw) return;
+    setUploading(true);
+    try {
+      const file = await prepareImage(raw);
+      const fd = new FormData(); fd.append("file", file);
+      const r = await fetch("/api/admin/event-image", { method: "POST", headers: { "x-admin-password": pw }, body: fd });
+      if (r.ok) onChange({ image: (await r.json()).url });
+      else alert("画像のアップロードに失敗しました：" + ((await r.json().catch(() => ({}))).error || r.status));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   return (
     <div className="space-y-3">
+      {/* image */}
       <div>
-        <label className="text-xs font-bold text-ink/70">日時（表示用の文字列）</label>
-        <input className={inp} placeholder="例: 10/17 (金) 13:00" value={ev.date} onChange={(e) => onChange({ date: e.target.value })} />
+        <label className="text-xs font-bold text-ink/70">イベント画像（任意）</label>
+        <div className="flex items-center gap-3 mt-1">
+          {ev.image ? (
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ev.image} alt="" className="w-28 h-20 object-cover rounded-lg border border-line" />
+              <button type="button" onClick={() => onChange({ image: "" })}
+                className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] font-bold rounded-full px-2 py-0.5 shadow">削除</button>
+            </div>
+          ) : (
+            <div className="w-28 h-20 rounded-lg border border-dashed border-line grid place-items-center text-[#b4ab9b] text-xs">なし</div>
+          )}
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} disabled={uploading} className="text-xs" />
+            {uploading && <p className="text-xs text-teal mt-1">アップロード中…</p>}
+          </div>
+        </div>
       </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-bold text-ink/70">日時（表示用の文字列）</label>
+          <input className={inp} placeholder="例: 10/17 (金) 13:00" value={ev.date} onChange={(e) => onChange({ date: e.target.value })} />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-ink/70">応募締め切り（任意）</label>
+          <input className={inp} placeholder="例: 10/15 (水) まで" value={ev.deadline} onChange={(e) => onChange({ deadline: e.target.value })} />
+        </div>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="rounded-xl bg-[#FFF9E9] p-3 space-y-2">
           <p className="text-xs font-extrabold text-ink/70">日本語</p>
           <input className={inp} placeholder="タイトル（必須）" value={ev.ja.title} onChange={(e) => onChange({ ja: { title: e.target.value } })} />
           <input className={inp} placeholder="場所（例: TOMOの家）" value={ev.ja.place} onChange={(e) => onChange({ ja: { place: e.target.value } })} />
+          <input className={inp} placeholder="参加費（例: 無料 / 1人1,000円）" value={ev.ja.fee} onChange={(e) => onChange({ ja: { fee: e.target.value } })} />
           <textarea className={inp} rows={2} placeholder="ひとこと説明" value={ev.ja.desc} onChange={(e) => onChange({ ja: { desc: e.target.value } })} />
         </div>
         <div className="rounded-xl bg-mint/60 p-3 space-y-2">
           <p className="text-xs font-extrabold text-ink/70">English（空欄なら日本語を表示）</p>
           <input className={inp} placeholder="Title" value={ev.en.title} onChange={(e) => onChange({ en: { title: e.target.value } })} />
           <input className={inp} placeholder="Place" value={ev.en.place} onChange={(e) => onChange({ en: { place: e.target.value } })} />
+          <input className={inp} placeholder="Fee (e.g. Free / ¥1,000)" value={ev.en.fee} onChange={(e) => onChange({ en: { fee: e.target.value } })} />
           <textarea className={inp} rows={2} placeholder="Short description" value={ev.en.desc} onChange={(e) => onChange({ en: { desc: e.target.value } })} />
         </div>
       </div>

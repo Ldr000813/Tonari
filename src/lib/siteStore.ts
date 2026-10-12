@@ -10,8 +10,8 @@ export async function listByPrefix(prefix: string) {
 // ---- Events (stored as a single JSON blob) ----
 const EVENTS_PATH = "site-meta/events.json";
 
-export type EvText = { title: string; place: string; desc: string };
-export type Ev = { id: string; date: string; ja: EvText; en: EvText };
+export type EvText = { title: string; place: string; desc: string; fee: string };
+export type Ev = { id: string; date: string; deadline: string; image: string; ja: EvText; en: EvText };
 
 export async function readEvents(): Promise<Ev[]> {
   try {
@@ -21,7 +21,18 @@ export async function readEvents(): Promise<Ev[]> {
     const r = await fetch(b.url, { cache: "no-store" });
     if (!r.ok) return [];
     const data = await r.json();
-    return Array.isArray(data) ? (data as Ev[]) : [];
+    if (!Array.isArray(data)) return [];
+    // normalize so older records (saved before new fields existed) have a full shape
+    const txt = (t: any): EvText => ({
+      title: t?.title ?? "", place: t?.place ?? "", desc: t?.desc ?? "", fee: t?.fee ?? "",
+    });
+    return data.map((e: any): Ev => ({
+      id: String(e?.id ?? ""),
+      date: e?.date ?? "",
+      deadline: e?.deadline ?? "",
+      image: e?.image ?? "",
+      ja: txt(e?.ja), en: txt(e?.en),
+    }));
   } catch {
     return [];
   }

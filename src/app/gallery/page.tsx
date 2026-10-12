@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Bi } from "@/lib/i18n";
+import { LINKS } from "@/lib/links";
 
 type Img = { url: string; pathname: string };
 
@@ -25,6 +26,25 @@ export default function Gallery() {
       <p className="lead mt-3">
         <Bi ja="これまでの集まりの一枚一枚。空気感が、いちばん伝わると思います。" en="Moments from our gatherings. Sometimes a photo says it best." />
       </p>
+
+      {LINKS.instagram && (
+        <div className="text-center mt-6">
+          <a
+            href={LINKS.instagram}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold text-white shadow-md active:scale-95"
+            style={{ background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF,#515BD4)" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+            </svg>
+            <Bi ja="Instagramで最新の様子を見る" en="See more on Instagram" />
+          </a>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-center text-[#a29a8c] text-sm mt-10">読み込み中…</p>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { del } from "@vercel/blob";
 import { isAdmin } from "@/lib/adminAuth";
 import { readEvents, writeEvents, newId, Ev } from "@/lib/siteStore";
 
@@ -9,6 +10,7 @@ function sanitizeText(t: any) {
     title: String(t?.title ?? "").slice(0, 120),
     place: String(t?.place ?? "").slice(0, 120),
     desc: String(t?.desc ?? "").slice(0, 600),
+    fee: String(t?.fee ?? "").slice(0, 80),
   };
 }
 
@@ -31,6 +33,8 @@ export async function POST(req: NextRequest) {
     const ev: Ev = {
       id: newId(),
       date: String(body?.date ?? "").slice(0, 60),
+      deadline: String(body?.deadline ?? "").slice(0, 60),
+      image: String(body?.image ?? "").slice(0, 500),
       ja: sanitizeText(body?.ja),
       en: sanitizeText(body?.en),
     };
@@ -56,6 +60,8 @@ export async function PATCH(req: NextRequest) {
     events[idx] = {
       id,
       date: String(body?.date ?? "").slice(0, 60),
+      deadline: String(body?.deadline ?? "").slice(0, 60),
+      image: String(body?.image ?? "").slice(0, 500),
       ja: sanitizeText(body?.ja),
       en: sanitizeText(body?.en),
     };
@@ -73,8 +79,10 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   try {
     const events = await readEvents();
+    const target = events.find((e) => e.id === id);
     const next = events.filter((e) => e.id !== id);
     await writeEvents(next);
+    if (target?.image) { try { await del(target.image); } catch {} }
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "delete_failed" }, { status: 500 });
