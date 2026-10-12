@@ -12,11 +12,33 @@ const defaultHero: HeroImage[] = [
 ];
 
 const doing = [
-  { ic: "🎉", ja: ["集まって、遊ぶ", "芝生でピクニックしたり、料理したり、お祭りに行ったり。予定が合う日に、ふらっと来てください。"], en: ["Hang out", "Picnics on the grass, cooking together, heading to a festival. Just drop by when a date works for you."] },
-  { ic: "🍚", ja: ["ごはんを一緒に", "同じ鍋をつついていると、なぜか話せる。うまく話せなくても、ぜんぜん大丈夫です。"], en: ["Eat together", "Somehow, sharing the same pot gets people talking. It's fine if your Japanese (or English) is shaky."] },
-  { ic: "🤝", ja: ["ただの友だちになる", "「教える・教わる」じゃなくて、対等に。イベントが終わってからも、関係は続いていきます。"], en: ["Become real friends", "Not teacher and student — just equals. The friendships keep going long after the event ends."] },
-  { ic: "🏠", ja: ["この街になじむ", "「どこで買い物する?」みたいな小さなことを、気軽に聞ける人ができます。"], en: ["Get to know the town", "You'll have someone to ask the small stuff — like where to shop, or what that sign means."] },
+  { key: "gather", ja: ["集まって、遊ぶ", "芝生でピクニックしたり、料理したり、お祭りに行ったり。予定が合う日に、ふらっと来てください。"], en: ["Hang out", "Picnics on the grass, cooking together, heading to a festival. Just drop by when a date works for you."] },
+  { key: "meal", ja: ["ごはんを一緒に", "同じ鍋をつついていると、なぜか話せる。うまく話せなくても、ぜんぜん大丈夫です。"], en: ["Eat together", "Somehow, sharing the same pot gets people talking. It's fine if your Japanese (or English) is shaky."] },
+  { key: "friends", ja: ["ただの友だちになる", "「教える・教わる」じゃなくて、対等に。イベントが終わってからも、関係は続いていきます。"], en: ["Become real friends", "Not teacher and student — just equals. The friendships keep going long after the event ends."] },
+  { key: "town", ja: ["この街になじむ", "「どこで買い物する?」みたいな小さなことを、気軽に聞ける人ができます。"], en: ["Get to know the town", "You'll have someone to ask the small stuff — like where to shop, or what that sign means."] },
 ];
+
+function Ico({ name }: { name: string }) {
+  const p = {
+    viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+    strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+    className: "w-6 h-6",
+  };
+  if (name === "gather") return (
+    <svg {...p}><circle cx="8.5" cy="8.5" r="2.2" /><circle cx="15.5" cy="8.5" r="2.2" />
+      <path d="M4.5 18c0-2.3 1.8-3.8 4-3.8s4 1.5 4 3.8" /><path d="M11.5 18c0-2.3 1.8-3.8 4-3.8s4 1.5 4 3.8" /></svg>
+  );
+  if (name === "meal") return (
+    <svg {...p}><path d="M3.5 11.5h17" /><path d="M5 11.5a7 7 0 0 0 14 0" />
+      <path d="M9.4 5c.6.6-.6 1.2 0 1.9" /><path d="M14 5c.6.6-.6 1.2 0 1.9" /></svg>
+  );
+  if (name === "friends") return (
+    <svg {...p}><circle cx="9.3" cy="12" r="4.6" /><circle cx="14.7" cy="12" r="4.6" /></svg>
+  );
+  return ( // town
+    <svg {...p}><path d="M3 20v-6l4-3 4 3v6" /><path d="M11 20V10.5l5-3.5 5 3.5V20" /><path d="M2.5 20h19" /></svg>
+  );
+}
 
 export default function Home() {
   const [heroImages, setHeroImages] = useState<HeroImage[]>(defaultHero);
@@ -73,12 +95,16 @@ export default function Home() {
       <section className="section pt-0">
         <h2 className="h2"><Bi ja="となりでやっていること" en="What we actually do" /></h2>
         <p className="lead"><Bi ja="むずかしく考えなくて大丈夫。楽しいから、また来たくなる。それだけです。" en="No need to overthink it. It's fun, so people come back. That's really all." /></p>
-        <div className="grid sm:grid-cols-2 gap-4 mt-8">
-          {doing.map((c, i) => (
-            <div key={i} className="card">
-              <div className="text-3xl">{c.ic}</div>
-              <h3 className="font-bold text-ink mt-3"><Bi ja={c.ja[0]} en={c.en[0]} /></h3>
-              <p className="text-sm text-ink/70 mt-1"><Bi ja={c.ja[1]} en={c.en[1]} /></p>
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
+          {doing.map((c) => (
+            <div key={c.key} className="card p-5 flex items-start gap-4">
+              <span className="shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-mint text-teal">
+                <Ico name={c.key} />
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-bold text-ink"><Bi ja={c.ja[0]} en={c.en[0]} /></h3>
+                <p className="text-sm text-ink/70 mt-1 leading-relaxed"><Bi ja={c.ja[1]} en={c.en[1]} /></p>
+              </div>
             </div>
           ))}
         </div>
