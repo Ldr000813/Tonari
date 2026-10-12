@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { prepareImage } from "@/lib/imagePrep";
 
 const PW_KEY = "tonari_admin_pw";
 
@@ -90,8 +91,9 @@ function HeroPanel({ pw }: { pw: string }) {
   useEffect(() => { load(); }, []); // eslint-disable-line
 
   async function upload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
+    const raw = e.target.files?.[0]; if (!raw) return;
     setBusy(true); setMsg("");
+    const file = await prepareImage(raw);
     const fd = new FormData(); fd.append("file", file);
     const r = await fetch("/api/admin/hero", { method: "POST", headers, body: fd });
     setBusy(false);
@@ -223,7 +225,8 @@ function GalleryPanel({ pw }: { pw: string }) {
   async function upload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files; if (!files || !files.length) return;
     setBusy(true); setMsg("");
-    for (const file of Array.from(files)) {
+    for (const raw of Array.from(files)) {
+      const file = await prepareImage(raw);
       const fd = new FormData(); fd.append("file", file);
       const r = await fetch("/api/admin/gallery", { method: "POST", headers, body: fd });
       if (!r.ok) { setMsg("アップロードに失敗しました：" + ((await r.json().catch(() => ({}))).error || r.status)); break; }
