@@ -506,7 +506,8 @@ function ToolsPanel({ pw }: { pw: string }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [createdUrl, setCreatedUrl] = useState("");
-  const [polls, setPolls] = useState<{ id: string; title: string; createdAt: number; dates: string[]; closed: boolean }[]>([]);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [polls, setPolls] = useState<{ id: string; title: string; note: string; createdAt: number; dates: string[]; closed: boolean }[]>([]);
 
   async function loadPolls() {
     const r = await fetch("/api/poll", { headers: { "x-admin-password": pw }, cache: "no-store" });
@@ -516,18 +517,34 @@ function ToolsPanel({ pw }: { pw: string }) {
 
   const siteBase = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "") || (typeof window !== "undefined" ? location.origin : "");
 
-  async function create() {
+  function startEdit(p: { id: string; title: string; note: string; dates: string[] }) {
+    setEditId(p.id); setTitle(p.title); setNote(p.note || ""); setDates([...p.dates].sort());
+    setCreatedUrl(""); setMsg("");
+    const d = p.dates.find((x) => /^\d{4}-\d{2}-\d{2}$/.test(x));
+    if (d) setView({ y: +d.slice(0, 4), m: +d.slice(5, 7) - 1 });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function cancelEdit() { setEditId(null); setTitle(""); setNote(""); setDates([]); setMsg(""); }
+
+  async function submitForm() {
     const ds = dates.filter(Boolean).sort();
     if (!title.trim()) { setMsg("タイトルを入力してください。"); return; }
     if (!ds.length) { setMsg("候補日をカレンダーから選んでください。"); return; }
     setBusy(true); setMsg(""); setCreatedUrl("");
-    const r = await fetch("/api/poll", { method: "POST", headers, body: JSON.stringify({ title, note, dates: ds }) });
-    setBusy(false);
-    if (r.ok) {
-      const { id } = await r.json();
-      setCreatedUrl(`${siteBase}/poll/${id}`);
-      setTitle(""); setNote(""); setDates([]); loadPolls();
-    } else setMsg("作成に失敗しました。");
+    if (editId) {
+      const r = await fetch(`/api/poll/${editId}`, { method: "PATCH", headers, body: JSON.stringify({ title, note, dates: ds }) });
+      setBusy(false);
+      if (r.ok) { setMsg("更新しました。"); setEditId(null); setTitle(""); setNote(""); setDates([]); loadPolls(); }
+      else setMsg("更新に失敗しました。");
+    } else {
+      const r = await fetch("/api/poll", { method: "POST", headers, body: JSON.stringify({ title, note, dates: ds }) });
+      setBusy(false);
+      if (r.ok) {
+        const { id } = await r.json();
+        setCreatedUrl(`${siteBase}/poll/${id}`);
+        setTitle(""); setNote(""); setDates([]); loadPolls();
+      } else setMsg("作成に失敗しました。");
+    }
   }
   async function removePoll(id: string) {
     if (!confirm("この日程調整を削除しますか？（回答も消えます）")) return;
@@ -542,8 +559,11 @@ function ToolsPanel({ pw }: { pw: string }) {
 
   return (
     <div>
-      <div className="card mb-6">
-        <p className="font-bold text-ink mb-1">かんたん日程調整（匿名）</p>
+      <div className={"card mb-6 " + (editId ? "ring-2 ring-teal" : "")}>
+        <div className="flex items-center justify-between mb-1">
+          <p className="font-bold text-ink">{editId ? "日程調整を編集中" : "かんたん日程調整（匿名）"}</p>
+          {editId && <button onClick={cancelEdit} className="text-xs text-[#8a8378] underline">編集をやめる</button>}
+        </div>
         <p className="text-xs text-[#8a8378] mb-3">候補日を並べて作成し、発行されたURLを共有。だれでも匿名で○△×で回答でき、集計が見られます（データベース不要・使い捨て）。</p>
 
         <label className="text-xs font-bold text-ink/70">タイトル</label>
@@ -584,8 +604,11 @@ function ToolsPanel({ pw }: { pw: string }) {
           </div>
         )}
 
-        <div className="mt-4">
-          <button onClick={create} disabled={busy} className="btn btn-primary text-sm py-2">作成してURLを発行</button>
+        <div className="mt-4 flex items-center gap-3">
+          <button onClick={submitForm} disabled={busy} className="btn btn-primary text-sm py-2">
+            {editId ? "更新する" : "作成してURLを発行"}
+          </button>
+          {editId && <button onClick={cancelEdit} className="text-sm text-[#8a8378] underline">キャンセル</button>}
         </div>
 
         {createdUrl && (
@@ -620,6 +643,7 @@ function ToolsPanel({ pw }: { pw: string }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <button onClick={() => startEdit(p)} className="text-xs font-bold text-teal">編集</button>
                   <button onClick={() => copy(url)} className="text-xs font-bold text-teal">URLコピー</button>
                   <a href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal underline">開く</a>
                   <button onClick={() => toggleClosed(p.id, !p.closed)} className="text-xs font-bold text-[#9a6b12]">

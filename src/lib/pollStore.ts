@@ -45,6 +45,23 @@ export async function setPollClosed(id: string, closed: boolean): Promise<boolea
   return true;
 }
 
+export async function updatePoll(
+  id: string,
+  fields: Partial<{ title: string; note: string; dates: string[]; closed: boolean }>,
+): Promise<Poll | null> {
+  const meta = await getPollMeta(id);
+  if (!meta) return null;
+  const next: Poll = {
+    ...meta,
+    ...(fields.title !== undefined ? { title: String(fields.title).slice(0, 120) } : {}),
+    ...(fields.note !== undefined ? { note: String(fields.note).slice(0, 300) } : {}),
+    ...(fields.dates !== undefined ? { dates: fields.dates.map((d) => String(d).slice(0, 80)).filter(Boolean).slice(0, 30) } : {}),
+    ...(fields.closed !== undefined ? { closed: !!fields.closed } : {}),
+  };
+  await put(`polls/${id}.json`, JSON.stringify(next), { access: "public", contentType: "application/json", addRandomSuffix: false });
+  return next;
+}
+
 export async function getResponses(id: string): Promise<Resp[]> {
   const { blobs } = await list({ prefix: `polls/${id}/r/` });
   const out = await Promise.all(blobs.map((b) => readJson<Resp>(b.url)));
