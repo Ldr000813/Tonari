@@ -12,10 +12,10 @@ const defaultHero: HeroImage[] = [
 ];
 
 const doing = [
-  { key: "gather", ja: ["集まって、遊ぶ", "芝生でピクニックしたり、料理したり、お祭りに行ったり。予定が合う日に、ふらっと来てください。"], en: ["Hang out", "Picnics on the grass, cooking together, heading to a festival. Just drop by when a date works for you."] },
-  { key: "meal", ja: ["ごはんを一緒に", "同じ鍋をつついていると、なぜか話せる。うまく話せなくても、ぜんぜん大丈夫です。"], en: ["Eat together", "Somehow, sharing the same pot gets people talking. It's fine if your Japanese (or English) is shaky."] },
-  { key: "friends", ja: ["ただの友だちになる", "「教える・教わる」じゃなくて、対等に。イベントが終わってからも、関係は続いていきます。"], en: ["Become real friends", "Not teacher and student — just equals. The friendships keep going long after the event ends."] },
-  { key: "town", ja: ["この街になじむ", "「どこで買い物する?」みたいな小さなことを、気軽に聞ける人ができます。"], en: ["Get to know the town", "You'll have someone to ask the small stuff — like where to shop, or what that sign means."] },
+  { key: "lang", ja: ["言語別のフリートーク", "英語・日本語・中国語…話したい言語のテーブルで、気軽におしゃべり。言語交換も、ここから。"], en: ["Free-talk by language", "Sit at the table for the language you want — English, Japanese, Chinese… Language exchange starts here."] },
+  { key: "meal", ja: ["ホームパーティ・ごはん", "みんなで料理して、同じ食卓を囲む。母国の味を持ち寄るのも楽しい。"], en: ["Home parties & meals", "Cook together and share a table. Bring a dish from your home country, too."] },
+  { key: "town", ja: ["観光スポット巡り・まち歩き", "京都・京田辺のいいところを一緒に。歩きながら、自然と仲良くなれます。"], en: ["Sightseeing & town walks", "Explore the best of Kyoto & Kyotanabe together — and get close while you walk."] },
+  { key: "friends", ja: ["対等な友だちになる", "「教える・教わる」じゃなく、ただの友だち。イベントのあとも、関係は続いていきます。"], en: ["Become real friends", "Not teacher and student — just friends. Bonds that keep going after the event ends."] },
 ];
 
 function Ico({ name }: { name: string }) {
@@ -24,6 +24,10 @@ function Ico({ name }: { name: string }) {
     strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
     className: "w-6 h-6",
   };
+  if (name === "lang") return (
+    <svg {...p}><path d="M3.5 6.5h11a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H9l-4 3v-3H3.5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z" />
+      <circle cx="7" cy="10" r=".6" fill="currentColor" /><circle cx="10" cy="10" r=".6" fill="currentColor" /><circle cx="13" cy="10" r=".6" fill="currentColor" /></svg>
+  );
   if (name === "gather") return (
     <svg {...p}><circle cx="8.5" cy="8.5" r="2.2" /><circle cx="15.5" cy="8.5" r="2.2" />
       <path d="M4.5 18c0-2.3 1.8-3.8 4-3.8s4 1.5 4 3.8" /><path d="M11.5 18c0-2.3 1.8-3.8 4-3.8s4 1.5 4 3.8" /></svg>
@@ -63,8 +67,8 @@ export default function Home() {
           </h1>
           <p className="max-w-xl mx-auto mt-4 text-white/90 font-medium drop-shadow">
             <Bi
-              ja="在日外国人・留学生と、地域の人が“半々・対等”に出会う場所。国がちがっても、人として、となりあう。"
-              en="Where international residents, students and locals meet — half and half, as equals."
+              ja="留学生も、大学生・高校生も、社会人も、地域の人も。国や立場がちがっても、人として対等に。言語交換・ごはん・まち歩きを楽しむ、あたたかい異文化共生コミュニティです。"
+              en="Students, working people, locals — everyone welcome. Language exchange, meals and town walks, a warm multicultural community where we meet simply as equals."
             />
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-8">
@@ -82,12 +86,12 @@ export default function Home() {
       <section className="section">
         <div className="bg-mint border border-mintline rounded-3xl p-8 text-center">
           <p className="text-lg font-extrabold text-teal mb-2">
-            <Bi ja="語学を学ぶ場所では、ありません。" en="This is not a language school." />
+            <Bi ja="語学“だけ”の場所じゃ、ありません。" en="More than just language." />
           </p>
           <p className="max-w-2xl mx-auto text-[15px] text-ink/90">
             <Bi
-              ja="「同じ人として尊重し合う」ことから始める場所です。一緒にイベントを楽しんだり、まちを巡ったりするうちに、自然と語学力も、友だちも、この街への愛着も育っていく。外国人も、地域の人も、どちらも“得をする”。それがとなりです。"
-              en="A place that starts from respecting each other simply as people. Through events and exploring the town together, language, friends and a sense of belonging grow naturally — and both newcomers and locals gain something."
+              ja="言語交換（言語別のフリートーク）もやります。でも何より大事にしているのは、“人”。留学生も、地域の人も、社会人も高校生も、国や年齢をこえて対等に出会い、ごはんを囲んだり、まちを歩いたりしながら、ゆっくり友だちになっていく。語学も友情も、その中で自然に育ちます。"
+              en="Yes, we do language exchange (free-talk by language). But what we care about most is people. Students, locals, working people — meeting as equals across country and age, sharing meals and walks, slowly becoming friends. Language and friendship grow naturally along the way."
             />
           </p>
         </div>
@@ -115,17 +119,18 @@ export default function Home() {
       {/* who it's for */}
       <section className="section pt-0">
         <h2 className="h2"><Bi ja="こんな人へ" en="Who it's for" /></h2>
+        <p className="lead"><Bi ja="留学生も、大学生・高校生も、社会人も、地域の人も。異文化共生に興味がある人なら、どなたでも大歓迎。" en="Students, working people, locals — anyone curious about living across cultures is welcome." /></p>
         <div className="grid sm:grid-cols-2 gap-4 mt-8">
           <div className="rounded-3xl p-6 bg-[#FFF6DC] border border-[#F0DFA0]">
-            <h3 className="font-bold">🌏 <Bi ja="外国から来た方・留学生へ" en="If you've come from abroad" /></h3>
+            <h3 className="font-bold">🌏 <Bi ja="海外から来た方・留学生へ" en="If you've come from abroad" /></h3>
             <p className="text-sm text-ink/80 mt-2">
               <Bi ja="日本に住んでいるのに、どこか「お客さん」のまま。そんな感じがするなら、一度のぞいてみてください。ここでは外国人としてじゃなく、ただのあなたとして会えます。" en="Living in Japan, but still somehow a 'guest'? If that sounds familiar, come take a look. Here you're not 'the foreigner' — just you." />
             </p>
           </div>
           <div className="rounded-3xl p-6 bg-mint border border-mintline">
-            <h3 className="font-bold">🍵 <Bi ja="地域にお住まいの方へ" en="If you live nearby" /></h3>
+            <h3 className="font-bold">🍵 <Bi ja="日本の学生・社会人・地域の方へ" en="If you're local — student, worker or resident" /></h3>
             <p className="text-sm text-ink/80 mt-2">
-              <Bi ja="海外の人と話してみたいけど、きっかけがない。英語に自信がなくても平気です。身構えず、ふつうに友だちになれます。" en="Curious about people from other countries but never had the chance? No confidence in English needed. Just come as you are and make friends." />
+              <Bi ja="海外の人と話してみたい、視野を広げたい、ただ楽しい仲間がほしい。どんな入り口でも大丈夫。英語に自信がなくても、身構えず、ふつうに友だちになれます。" en="Want to meet people from abroad, widen your view, or just find fun friends? Any reason works. No English confidence needed — just come as you are." />
             </p>
           </div>
         </div>

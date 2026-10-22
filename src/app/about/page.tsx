@@ -41,8 +41,8 @@ export default function About() {
         </h1>
         <p className="lead mt-3">
           <Bi
-            ja="外国人と地域の人が、半々・対等に“となりあう”。双方が得をする多文化共生の場です。"
-            en="A place where newcomers and locals become neighbors — half and half, as equals, where both sides gain."
+            ja="留学生も、大学生・高校生も、社会人も、地域の人も。国や立場をこえて対等に出会い、言語交換やごはん、まち歩きを楽しむ——人を大事にする、あたたかい異文化共生のコミュニティです。"
+            en="Students, working people and locals alike — meeting as equals beyond country or status, enjoying language exchange, meals and town walks. A warm, people-first community for living across cultures."
           />
         </p>
       </section>
