@@ -514,6 +514,8 @@ function ToolsPanel({ pw }: { pw: string }) {
   }
   useEffect(() => { loadPolls(); }, []); // eslint-disable-line
 
+  const siteBase = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "") || (typeof window !== "undefined" ? location.origin : "");
+
   async function create() {
     const ds = dates.filter(Boolean).sort();
     if (!title.trim()) { setMsg("タイトルを入力してください。"); return; }
@@ -523,7 +525,7 @@ function ToolsPanel({ pw }: { pw: string }) {
     setBusy(false);
     if (r.ok) {
       const { id } = await r.json();
-      setCreatedUrl(`${location.origin}/poll/${id}`);
+      setCreatedUrl(`${siteBase}/poll/${id}`);
       setTitle(""); setNote(""); setDates([]); loadPolls();
     } else setMsg("作成に失敗しました。");
   }
@@ -605,7 +607,7 @@ function ToolsPanel({ pw }: { pw: string }) {
       ) : (
         <div className="space-y-2">
           {polls.map((p) => {
-            const url = `${typeof window !== "undefined" ? location.origin : ""}/poll/${p.id}`;
+            const url = `${siteBase}/poll/${p.id}`;
             return (
               <div key={p.id} className="card py-3">
                 <div className="flex items-center gap-3">
