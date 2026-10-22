@@ -45,6 +45,9 @@ export default function About() {
             en="Students, working people and locals alike — meeting as equals beyond country or status, enjoying language exchange, meals and town walks. A warm, people-first community for living across cultures."
           />
         </p>
+        <p className="text-center text-sm font-bold text-teal mt-4">
+          <Bi ja="同志社大学の学生が中心になって立ち上げた、学生発のコミュニティです。" en="A student-born community, started by students at Doshisha University." />
+        </p>
       </section>
 
       {/* problem */}
@@ -52,8 +55,8 @@ export default function About() {
         <div className="card">
           <p className="text-ink/90">
             <Bi
-              ja="日本は少子高齢化が進み、外国人材の受け入れはもう欠かせません。でも実際には、多くの外国人が「日本にいるのに、日本社会には入れていない」という孤立を抱えています。地域の人も、どう関わればいいか距離感がつかめずにいる。これは外国人だけの問題ではなく、双方の課題です。"
-              en="As Japan ages, welcoming people from abroad has become essential. Yet many feel they're in Japan but not quite 'in' it, while locals aren't sure how to connect. This isn't only a newcomer's problem — it's a shared one."
+              ja="海外から日本に来た人の多くが、「ここにいるのに、どこか“お客さん”のまま」という寂しさを感じることがあります。地域の人も、関わってみたいけれど、きっかけや距離感がわからない。どちらが悪いわけでもなく、ただ、気軽に出会える場所がないだけ。となりは、その“最初のきっかけ”をつくる、小さな場所です。"
+              en="Lots of people who've come to Japan feel like they're here, yet somehow still a guest. And plenty of locals would love to connect but aren't sure where to start. Neither side is at fault — there just isn't an easy place to meet. Tonari is that small first step."
             />
           </p>
         </div>

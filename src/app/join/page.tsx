@@ -1,6 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Bi } from "@/lib/i18n";
 import { LINKS } from "@/lib/links";
+import FlipGallery from "@/components/FlipGallery";
 
 const steps = [
   { ja: ["SNS・LINEでつながる", "最新のイベント情報は、SNSやLINEでお知らせします。"], en: ["Follow us", "We post event news on social media and LINE."] },
@@ -8,7 +10,20 @@ const steps = [
   { ja: ["顔を出して、となりに", "一度来たら、もうあなたも“となり”です。"], en: ["Just show up", "Once you come, you're already a neighbor."] },
 ];
 
+const fallbackPhotos = ["/events/e3.jpg", "/events/e4.jpg", "/events/e1.jpg", "/events/e2.jpg"];
+
 export default function Join() {
+  const [photos, setPhotos] = useState<string[]>(fallbackPhotos);
+  useEffect(() => {
+    fetch("/api/gallery", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        const urls = Array.isArray(j.images) ? j.images.map((x: any) => x.url).filter(Boolean) : [];
+        if (urls.length) setPhotos(urls.slice(0, 6));
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="section">
       <h1 className="text-3xl sm:text-4xl font-black text-ink text-center">
@@ -30,12 +45,23 @@ export default function Join() {
         ))}
       </div>
 
-      <div className="mt-12 rounded-3xl p-8 bg-mint border border-mintline text-center">
+      {/* past events — cards flip in as you scroll toward the join button */}
+      <div className="mt-16 max-w-xl mx-auto">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-ink text-center">
+          <Bi ja="これまでの、となり" en="Moments from Tonari" />
+        </h2>
+        <p className="text-center text-sm text-[#8a8378] mt-1 mb-8">
+          <Bi ja="スクロールして、のぞいてみてください。" en="Scroll down and take a peek." />
+        </p>
+        <FlipGallery images={photos} />
+      </div>
+
+      <div className="mt-14 rounded-3xl p-8 bg-mint border border-mintline text-center max-w-xl mx-auto">
         <p className="text-ink/90 font-bold">
           <Bi ja="「海の向こうの人も、自分と何も変わらない」" en="“Even across the sea, we're all the same.”" />
         </p>
         <p className="text-sm text-[#8a8378] mt-2">
-          <Bi ja="そう思えた時間を、あなたにも。まずは気軽に、となりへ。" en="We'd love for you to feel that too. Come be a neighbor." />
+          <Bi ja="そう思えた時間を、あなたにも。まずは気軽に、となりへ。" en="We'd love for you to feel that too. Come join us." />
         </p>
       </div>
 
