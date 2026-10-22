@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const poll = await getPollMeta(params.id);
   if (!poll) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (poll.closed) return NextResponse.json({ error: "closed" }, { status: 403 });
   try {
     const body = await req.json();
     const picks: Record<string, Pick> = {};

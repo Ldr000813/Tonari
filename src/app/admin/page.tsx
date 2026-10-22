@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { prepareImage } from "@/lib/imagePrep";
-import { evStatus } from "@/lib/eventStatus";
+import { evStatus, fmtDate } from "@/lib/eventStatus";
+import CalendarMonth, { dayNum } from "@/components/CalendarMonth";
 
 const PW_KEY = "tonari_admin_pw";
 
@@ -497,13 +498,15 @@ function DisplayImagePicker({ ev, pw, onChange }: { ev: Ev; pw: string; onChange
 function ToolsPanel({ pw }: { pw: string }) {
   const inp = "w-full border border-line rounded-lg p-2 text-sm";
   const headers = { "x-admin-password": pw, "Content-Type": "application/json" };
+  const now = new Date();
+  const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
-  const [dates, setDates] = useState<string[]>([""]);
+  const [dates, setDates] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [createdUrl, setCreatedUrl] = useState("");
-  const [polls, setPolls] = useState<{ id: string; title: string; createdAt: number; dates: string[] }[]>([]);
+  const [polls, setPolls] = useState<{ id: string; title: string; createdAt: number; dates: string[]; closed: boolean }[]>([]);
 
   async function loadPolls() {
     const r = await fetch("/api/poll", { headers: { "x-admin-password": pw }, cache: "no-store" });
@@ -512,21 +515,25 @@ function ToolsPanel({ pw }: { pw: string }) {
   useEffect(() => { loadPolls(); }, []); // eslint-disable-line
 
   async function create() {
-    const ds = dates.map((d) => d.trim()).filter(Boolean);
+    const ds = dates.filter(Boolean).sort();
     if (!title.trim()) { setMsg("タイトルを入力してください。"); return; }
-    if (!ds.length) { setMsg("候補日を1つ以上入力してください。"); return; }
+    if (!ds.length) { setMsg("候補日をカレンダーから選んでください。"); return; }
     setBusy(true); setMsg(""); setCreatedUrl("");
     const r = await fetch("/api/poll", { method: "POST", headers, body: JSON.stringify({ title, note, dates: ds }) });
     setBusy(false);
     if (r.ok) {
       const { id } = await r.json();
       setCreatedUrl(`${location.origin}/poll/${id}`);
-      setTitle(""); setNote(""); setDates([""]); loadPolls();
+      setTitle(""); setNote(""); setDates([]); loadPolls();
     } else setMsg("作成に失敗しました。");
   }
   async function removePoll(id: string) {
     if (!confirm("この日程調整を削除しますか？（回答も消えます）")) return;
     const r = await fetch(`/api/poll/${id}`, { method: "DELETE", headers: { "x-admin-password": pw } });
+    if (r.ok) loadPolls();
+  }
+  async function toggleClosed(id: string, closed: boolean) {
+    const r = await fetch(`/api/poll/${id}`, { method: "PATCH", headers, body: JSON.stringify({ closed }) });
     if (r.ok) loadPolls();
   }
   function copy(u: string) { try { navigator.clipboard?.writeText(u); setMsg("URLをコピーしました。"); } catch {} }
@@ -543,20 +550,37 @@ function ToolsPanel({ pw }: { pw: string }) {
         <label className="text-xs font-bold text-ink/70">ひとこと説明（任意）</label>
         <textarea className={inp + " mb-3"} rows={2} placeholder="例: ホームパーティを予定。都合のいい日に○をつけてね。" value={note} onChange={(e) => setNote(e.target.value)} />
 
-        <label className="text-xs font-bold text-ink/70">候補日</label>
-        <div className="space-y-2 mt-1">
-          {dates.map((d, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input className={inp} placeholder="例: 12/6(土) 19:00〜" value={d}
-                onChange={(e) => setDates((a) => a.map((x, j) => (j === i ? e.target.value : x)))} />
-              {dates.length > 1 && (
-                <button type="button" onClick={() => setDates((a) => a.filter((_, j) => j !== i))}
-                  className="text-rose-600 text-sm shrink-0">削除</button>
-              )}
-            </div>
-          ))}
+        <label className="text-xs font-bold text-ink/70">候補日（カレンダーで選ぶ）</label>
+        <p className="text-[11px] text-[#8a8378] mb-2">日付をタップで追加／もう一度タップで解除。月は ‹ › で移動できます。</p>
+        <div className="max-w-xs">
+          <CalendarMonth
+            y={view.y} m={view.m}
+            onPrev={() => setView((v) => (v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 }))}
+            onNext={() => setView((v) => (v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 }))}
+            cell={(iso) => {
+              const on = dates.includes(iso);
+              return (
+                <button type="button" onClick={() => setDates((a) => (a.includes(iso) ? a.filter((x) => x !== iso) : [...a, iso].sort()))}
+                  className={"w-full h-full rounded-lg text-sm transition-colors " + (on ? "bg-teal text-white font-bold" : "text-ink hover:bg-mint")}>
+                  {dayNum(iso)}
+                </button>
+              );
+            }}
+          />
         </div>
-        <button type="button" onClick={() => setDates((a) => [...a, ""])} className="text-teal text-sm font-bold mt-2">＋ 候補日を追加</button>
+        {dates.filter(Boolean).length > 0 && (
+          <div className="mt-3">
+            <p className="text-xs font-bold text-ink/70 mb-1">選択中（{dates.filter(Boolean).length}）</p>
+            <div className="flex flex-wrap gap-1.5">
+              {dates.filter(Boolean).sort().map((iso) => (
+                <span key={iso} className="inline-flex items-center gap-1 rounded-full bg-mint text-teal text-xs font-bold pl-2.5 pr-1 py-1">
+                  {fmtDate(iso, "ja")}
+                  <button type="button" onClick={() => setDates((a) => a.filter((x) => x !== iso))} className="w-4 h-4 rounded-full bg-white/70 text-teal leading-none">×</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4">
           <button onClick={create} disabled={busy} className="btn btn-primary text-sm py-2">作成してURLを発行</button>
@@ -583,14 +607,24 @@ function ToolsPanel({ pw }: { pw: string }) {
           {polls.map((p) => {
             const url = `${typeof window !== "undefined" ? location.origin : ""}/poll/${p.id}`;
             return (
-              <div key={p.id} className="card flex items-center gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink truncate">{p.title}</p>
-                  <p className="text-xs text-[#8a8378]">{p.dates.length}候補 ・ {new Date(p.createdAt).toLocaleDateString("ja-JP")}</p>
+              <div key={p.id} className="card py-3">
+                <div className="flex items-center gap-3">
+                  <span className={"inline-flex items-center rounded-full text-[11px] font-bold px-2 py-0.5 shrink-0 " + (p.closed ? "bg-[#FADCDC] text-[#b4474a]" : "bg-mint text-teal")}>
+                    {p.closed ? "中止中" : "受付中"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-ink truncate">{p.title}</p>
+                    <p className="text-xs text-[#8a8378]">{p.dates.length}候補 ・ {new Date(p.createdAt).toLocaleDateString("ja-JP")}</p>
+                  </div>
                 </div>
-                <button onClick={() => copy(url)} className="text-xs font-bold text-teal shrink-0">URLコピー</button>
-                <a href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal underline shrink-0">開く</a>
-                <button onClick={() => removePoll(p.id)} className="text-xs text-rose-600 underline shrink-0">削除</button>
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <button onClick={() => copy(url)} className="text-xs font-bold text-teal">URLコピー</button>
+                  <a href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal underline">開く</a>
+                  <button onClick={() => toggleClosed(p.id, !p.closed)} className="text-xs font-bold text-[#9a6b12]">
+                    {p.closed ? "▶ 再開する" : "■ 受付を中止"}
+                  </button>
+                  <button onClick={() => removePoll(p.id)} className="ml-auto text-xs text-rose-600 underline">削除</button>
+                </div>
               </div>
             );
           })}
