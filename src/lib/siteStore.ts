@@ -18,7 +18,10 @@ export type Ev = {
   startDate: string;    // 開催日 "YYYY-MM-DD"（自動非表示などに使用）
   deadlineDate: string; // 応募締め切り "YYYY-MM-DD"
   paused: boolean;      // 一時停止（公開ページに出さない）
-  image: string;
+  image: string;        // AIに渡す画像（チラシ等・読み取り用。表示画像が無ければ表示にも使う）
+  displayImage: string; // 公開カードに表示する画像
+  dispX: number;        // 表示画像の焦点 X (0-100 %)
+  dispY: number;        // 表示画像の焦点 Y (0-100 %)
   ja: EvText;
   en: EvText;
 };
@@ -44,6 +47,9 @@ export async function readEvents(): Promise<Ev[]> {
       deadlineDate: e?.deadlineDate ?? "",
       paused: !!e?.paused,
       image: e?.image ?? "",
+      displayImage: e?.displayImage ?? "",
+      dispX: typeof e?.dispX === "number" ? e.dispX : 50,
+      dispY: typeof e?.dispY === "number" ? e.dispY : 50,
       ja: txt(e?.ja), en: txt(e?.en),
     }));
   } catch {

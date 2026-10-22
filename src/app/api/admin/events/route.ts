@@ -5,6 +5,10 @@ import { readEvents, writeEvents, newId, Ev } from "@/lib/siteStore";
 
 export const dynamic = "force-dynamic";
 
+function pct(v: any) {
+  const n = Math.round(Number(v));
+  return isNaN(n) ? 50 : Math.min(100, Math.max(0, n));
+}
 function sanitizeText(t: any) {
   return {
     title: String(t?.title ?? "").slice(0, 120),
@@ -38,6 +42,8 @@ export async function POST(req: NextRequest) {
       deadlineDate: String(body?.deadlineDate ?? "").slice(0, 10),
       paused: !!body?.paused,
       image: String(body?.image ?? "").slice(0, 500),
+      displayImage: String(body?.displayImage ?? "").slice(0, 500),
+      dispX: pct(body?.dispX), dispY: pct(body?.dispY),
       ja: sanitizeText(body?.ja),
       en: sanitizeText(body?.en),
     };
@@ -68,6 +74,8 @@ export async function PATCH(req: NextRequest) {
       deadlineDate: String(body?.deadlineDate ?? "").slice(0, 10),
       paused: !!body?.paused,
       image: String(body?.image ?? "").slice(0, 500),
+      displayImage: String(body?.displayImage ?? "").slice(0, 500),
+      dispX: pct(body?.dispX), dispY: pct(body?.dispY),
       ja: sanitizeText(body?.ja),
       en: sanitizeText(body?.en),
     };
@@ -88,7 +96,7 @@ export async function DELETE(req: NextRequest) {
     const target = events.find((e) => e.id === id);
     const next = events.filter((e) => e.id !== id);
     await writeEvents(next);
-    if (target?.image) { try { await del(target.image); } catch {} }
+    for (const u of [target?.image, target?.displayImage]) { if (u) { try { await del(u); } catch {} } }
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "delete_failed" }, { status: 500 });

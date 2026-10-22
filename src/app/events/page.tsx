@@ -7,7 +7,8 @@ type EvText = { title: string; place: string; desc: string; fee: string };
 type Ev = {
   id: string; date: string; deadline: string;
   startDate: string; deadlineDate: string;
-  image: string; closed?: boolean; ja: EvText; en: EvText;
+  image: string; displayImage?: string; dispX?: number; dispY?: number;
+  closed?: boolean; ja: EvText; en: EvText;
 };
 
 export default function Events() {
@@ -49,14 +50,16 @@ export default function Events() {
             const hasDeadline = !!(e.deadline || e.deadlineDate);
             const ddJa = e.deadline ? `締切 ${e.deadline}` : (e.deadlineDate ? `締切 ${fmtDate(e.deadlineDate, "ja")}` : "");
             const ddEn = e.deadline ? `Deadline: ${e.deadline}` : (e.deadlineDate ? `Deadline: ${fmtDate(e.deadlineDate, "en")}` : "");
+            const cardImg = e.displayImage || e.image;
+            const pos = e.displayImage ? `${e.dispX ?? 50}% ${e.dispY ?? 50}%` : "center";
             return (
               <div key={e.id} className={"card overflow-hidden p-0" + (e.closed ? " opacity-75" : "")}>
-                {e.image && (
+                {cardImg && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={e.image} alt="" className={"w-full h-44 object-cover" + (e.closed ? " grayscale-[35%]" : "")} loading="lazy" />
+                  <img src={cardImg} alt="" style={{ objectPosition: pos }} className={"w-full h-44 object-cover" + (e.closed ? " grayscale-[35%]" : "")} loading="lazy" />
                 )}
                 <div className="p-5 flex items-start gap-4">
-                  {!e.image && <div className="w-14 h-14 rounded-xl bg-mint flex items-center justify-center text-2xl shrink-0">🎉</div>}
+                  {!cardImg && <div className="w-14 h-14 rounded-xl bg-mint flex items-center justify-center text-2xl shrink-0">🎉</div>}
                   <div className="min-w-0 flex-1">
                     {(dateJa || dateEn) && <div className="text-xs font-bold text-teal"><Bi ja={dateJa} en={dateEn} /></div>}
                     <h3 className="font-bold text-ink mt-0.5"><Bi ja={e.ja.title} en={e.en.title || e.ja.title} /></h3>

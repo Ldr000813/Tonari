@@ -10,7 +10,8 @@ type EvText = { title: string; place: string; desc: string; fee: string };
 type Ev = {
   id: string; date: string; deadline: string;
   startDate: string; deadlineDate: string; paused: boolean;
-  image: string; ja: EvText; en: EvText;
+  image: string; displayImage: string; dispX: number; dispY: number;
+  ja: EvText; en: EvText;
 };
 
 type Tab = "hero" | "gallery" | "events";
@@ -280,7 +281,8 @@ function GalleryPanel({ pw }: { pw: string }) {
 /* ---------------- Events ---------------- */
 
 const emptyEv = (): Ev => ({
-  id: "", date: "", deadline: "", startDate: "", deadlineDate: "", paused: false, image: "",
+  id: "", date: "", deadline: "", startDate: "", deadlineDate: "", paused: false,
+  image: "", displayImage: "", dispX: 50, dispY: 50,
   ja: { title: "", place: "", desc: "", fee: "" },
   en: { title: "", place: "", desc: "", fee: "" },
 });
@@ -405,9 +407,87 @@ function mergeEv(e: Ev, patch: any): Ev {
     ...("deadlineDate" in patch ? { deadlineDate: patch.deadlineDate } : {}),
     ...("paused" in patch ? { paused: patch.paused } : {}),
     ...("image" in patch ? { image: patch.image } : {}),
+    ...("displayImage" in patch ? { displayImage: patch.displayImage } : {}),
+    ...("dispX" in patch ? { dispX: patch.dispX } : {}),
+    ...("dispY" in patch ? { dispY: patch.dispY } : {}),
     ja: patch.ja ? { ...e.ja, ...patch.ja } : e.ja,
     en: patch.en ? { ...e.en, ...patch.en } : e.en,
   };
+}
+
+// 表示画像のアップロード＋焦点（指で中心指定）ピッカー
+function DisplayImagePicker({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (p: any) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const x = ev.dispX ?? 50, y = ev.dispY ?? 50;
+
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.files?.[0]; if (!raw) return;
+    setUploading(true);
+    try {
+      const file = await prepareImage(raw);
+      const fd = new FormData(); fd.append("file", file);
+      const r = await fetch("/api/admin/event-image", { method: "POST", headers: { "x-admin-password": pw }, body: fd });
+      if (r.ok) onChange({ displayImage: (await r.json()).url, dispX: 50, dispY: 50 });
+      else alert("画像のアップロードに失敗しました：" + ((await r.json().catch(() => ({}))).error || r.status));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+  function applyFrom(clientX: number, clientY: number) {
+    const el = boxRef.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const nx = Math.min(100, Math.max(0, Math.round(((clientX - r.left) / r.width) * 100)));
+    const ny = Math.min(100, Math.max(0, Math.round(((clientY - r.top) / r.height) * 100)));
+    onChange({ dispX: nx, dispY: ny });
+  }
+
+  return (
+    <div className="rounded-xl border border-line p-3">
+      <label className="text-xs font-bold text-ink/70">表示画像（任意・公開カードに出る写真）</label>
+      {!ev.displayImage ? (
+        <div className="mt-1">
+          <input ref={fileRef} type="file" accept="image/*" onChange={pick} disabled={uploading} className="text-xs" />
+          {uploading && <p className="text-xs text-teal mt-1">アップロード中…</p>}
+          <p className="text-[11px] text-[#8a8378] mt-1">未設定なら、上の「AIに渡す画像」が表示に使われます。</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-3 mt-2">
+          <div>
+            <p className="text-[11px] text-[#8a8378] mb-1">画像の上を<b>指でタッチ／ドラッグ</b>して、中心に映す場所を指定</p>
+            <div
+              ref={boxRef}
+              onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); setDragging(true); applyFrom(e.clientX, e.clientY); }}
+              onPointerMove={(e) => { if (dragging) applyFrom(e.clientX, e.clientY); }}
+              onPointerUp={() => setDragging(false)}
+              onPointerCancel={() => setDragging(false)}
+              className="relative w-full rounded-lg overflow-hidden border border-line cursor-crosshair select-none touch-none bg-[#f3efe6]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ev.displayImage} alt="" draggable={false} className="w-full max-h-52 object-contain pointer-events-none" />
+              <div className="absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-2 border-white shadow-[0_0_0_2px_rgba(0,0,0,0.4)] bg-teal/70 pointer-events-none"
+                style={{ left: `${x}%`, top: `${y}%` }} />
+            </div>
+            <p className="text-[11px] text-[#8a8378] mt-1">中心：{x}% / {y}%</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-ink/70 mb-1">カードでの見え方</p>
+            <div className="relative w-full aspect-[16/7] rounded-lg overflow-hidden border border-line bg-ink">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ev.displayImage} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${x}% ${y}%` }} />
+            </div>
+            <div className="flex items-center gap-3 mt-2">
+              <button type="button" onClick={() => onChange({ dispX: 50, dispY: 50 })} className="text-xs text-[#8a8378] underline">中央に戻す</button>
+              <button type="button" onClick={() => onChange({ displayImage: "" })} className="ml-auto text-xs text-rose-600 underline">表示画像を削除</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 type AiProps = { prompt: string; setPrompt: (s: string) => void; run: () => void; busy: boolean; msg?: string };
@@ -439,10 +519,11 @@ function EvFields({ ev, pw, onChange, ai }: { ev: Ev; pw: string; onChange: (pat
         <span className="text-sm font-bold text-ink">一時停止（チェックすると公開ページに表示されません）</span>
       </label>
 
-      {/* image */}
+      {/* AI source image */}
       <div>
-        <label className="text-xs font-bold text-ink/70">イベント画像（任意）</label>
-        <div className="flex items-center gap-3 mt-1">
+        <label className="text-xs font-bold text-ink/70">AIに渡す画像（任意・読み取り用）</label>
+        <p className="text-[11px] text-[#8a8378] mb-1">チラシなど。下の「AIで自動入力」の読み取りに使います。表示画像が未設定のときは、この画像が公開カードにも表示されます。</p>
+        <div className="flex items-center gap-3">
           {ev.image ? (
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -459,6 +540,9 @@ function EvFields({ ev, pw, onChange, ai }: { ev: Ev; pw: string; onChange: (pat
           </div>
         </div>
       </div>
+
+      {/* display image + focal picker */}
+      <DisplayImagePicker ev={ev} pw={pw} onChange={onChange} />
 
       {/* AI auto-fill (add form only) */}
       {ai && (
