@@ -14,7 +14,7 @@ type Ev = {
   ja: EvText; en: EvText;
 };
 
-type Tab = "hero" | "gallery" | "events";
+type Tab = "hero" | "gallery" | "events" | "tools";
 
 export default function Admin() {
   const [pw, setPw] = useState("");
@@ -72,11 +72,13 @@ export default function Admin() {
         {tabBtn("hero", "ホーム写真")}
         {tabBtn("gallery", "活動のようす")}
         {tabBtn("events", "イベント")}
+        {tabBtn("tools", "ツール")}
       </div>
 
       {tab === "hero" && <HeroPanel pw={pw} />}
       {tab === "gallery" && <GalleryPanel pw={pw} />}
       {tab === "events" && <EventsPanel pw={pw} />}
+      {tab === "tools" && <ToolsPanel pw={pw} />}
     </section>
   );
 }
@@ -484,6 +486,114 @@ function DisplayImagePicker({ ev, pw, onChange }: { ev: Ev; pw: string; onChange
               <button type="button" onClick={() => onChange({ displayImage: "" })} className="ml-auto text-xs text-rose-600 underline">表示画像を削除</button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Tools: anonymous date poll ---------------- */
+
+function ToolsPanel({ pw }: { pw: string }) {
+  const inp = "w-full border border-line rounded-lg p-2 text-sm";
+  const headers = { "x-admin-password": pw, "Content-Type": "application/json" };
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [dates, setDates] = useState<string[]>([""]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [createdUrl, setCreatedUrl] = useState("");
+  const [polls, setPolls] = useState<{ id: string; title: string; createdAt: number; dates: string[] }[]>([]);
+
+  async function loadPolls() {
+    const r = await fetch("/api/poll", { headers: { "x-admin-password": pw }, cache: "no-store" });
+    if (r.ok) setPolls((await r.json()).polls || []);
+  }
+  useEffect(() => { loadPolls(); }, []); // eslint-disable-line
+
+  async function create() {
+    const ds = dates.map((d) => d.trim()).filter(Boolean);
+    if (!title.trim()) { setMsg("タイトルを入力してください。"); return; }
+    if (!ds.length) { setMsg("候補日を1つ以上入力してください。"); return; }
+    setBusy(true); setMsg(""); setCreatedUrl("");
+    const r = await fetch("/api/poll", { method: "POST", headers, body: JSON.stringify({ title, note, dates: ds }) });
+    setBusy(false);
+    if (r.ok) {
+      const { id } = await r.json();
+      setCreatedUrl(`${location.origin}/poll/${id}`);
+      setTitle(""); setNote(""); setDates([""]); loadPolls();
+    } else setMsg("作成に失敗しました。");
+  }
+  async function removePoll(id: string) {
+    if (!confirm("この日程調整を削除しますか？（回答も消えます）")) return;
+    const r = await fetch(`/api/poll/${id}`, { method: "DELETE", headers: { "x-admin-password": pw } });
+    if (r.ok) loadPolls();
+  }
+  function copy(u: string) { try { navigator.clipboard?.writeText(u); setMsg("URLをコピーしました。"); } catch {} }
+
+  return (
+    <div>
+      <div className="card mb-6">
+        <p className="font-bold text-ink mb-1">かんたん日程調整（匿名）</p>
+        <p className="text-xs text-[#8a8378] mb-3">候補日を並べて作成し、発行されたURLを共有。だれでも匿名で○△×で回答でき、集計が見られます（データベース不要・使い捨て）。</p>
+
+        <label className="text-xs font-bold text-ink/70">タイトル</label>
+        <input className={inp + " mb-3"} placeholder="例: 12月の交流会はいつがいい？" value={title} onChange={(e) => setTitle(e.target.value)} />
+
+        <label className="text-xs font-bold text-ink/70">ひとこと説明（任意）</label>
+        <textarea className={inp + " mb-3"} rows={2} placeholder="例: ホームパーティを予定。都合のいい日に○をつけてね。" value={note} onChange={(e) => setNote(e.target.value)} />
+
+        <label className="text-xs font-bold text-ink/70">候補日</label>
+        <div className="space-y-2 mt-1">
+          {dates.map((d, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input className={inp} placeholder="例: 12/6(土) 19:00〜" value={d}
+                onChange={(e) => setDates((a) => a.map((x, j) => (j === i ? e.target.value : x)))} />
+              {dates.length > 1 && (
+                <button type="button" onClick={() => setDates((a) => a.filter((_, j) => j !== i))}
+                  className="text-rose-600 text-sm shrink-0">削除</button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={() => setDates((a) => [...a, ""])} className="text-teal text-sm font-bold mt-2">＋ 候補日を追加</button>
+
+        <div className="mt-4">
+          <button onClick={create} disabled={busy} className="btn btn-primary text-sm py-2">作成してURLを発行</button>
+        </div>
+
+        {createdUrl && (
+          <div className="mt-4 rounded-xl bg-mint/60 border border-mintline p-3">
+            <p className="text-xs font-bold text-teal mb-1">共有用URL（これを送ってください）</p>
+            <div className="flex items-center gap-2">
+              <input readOnly value={createdUrl} className={inp + " bg-white"} onFocus={(e) => e.currentTarget.select()} />
+              <button onClick={() => copy(createdUrl)} className="btn btn-ghost text-xs py-2 shrink-0">コピー</button>
+              <a href={createdUrl} target="_blank" rel="noreferrer" className="btn btn-primary text-xs py-2 shrink-0">開く</a>
+            </div>
+          </div>
+        )}
+        {msg && <p className="text-teal text-sm mt-3">{msg}</p>}
+      </div>
+
+      <p className="text-sm font-semibold text-ink/70 mb-3">作成済みの日程調整（{polls.length}）</p>
+      {polls.length === 0 ? (
+        <p className="text-[#a29a8c] text-sm">まだありません。上から作成してください。</p>
+      ) : (
+        <div className="space-y-2">
+          {polls.map((p) => {
+            const url = `${typeof window !== "undefined" ? location.origin : ""}/poll/${p.id}`;
+            return (
+              <div key={p.id} className="card flex items-center gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-ink truncate">{p.title}</p>
+                  <p className="text-xs text-[#8a8378]">{p.dates.length}候補 ・ {new Date(p.createdAt).toLocaleDateString("ja-JP")}</p>
+                </div>
+                <button onClick={() => copy(url)} className="text-xs font-bold text-teal shrink-0">URLコピー</button>
+                <a href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal underline shrink-0">開く</a>
+                <button onClick={() => removePoll(p.id)} className="text-xs text-rose-600 underline shrink-0">削除</button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
