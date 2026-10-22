@@ -11,7 +11,19 @@ export async function POST(req: NextRequest) {
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) return NextResponse.json({ error: "GEMINI_API_KEY が未設定です" }, { status: 500 });
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+
+  // Model fallback chain: GEMINI_MODELS (comma list) overrides; otherwise the
+  // configured model first, then progressively more stable fallbacks.
+  // Strip quotes/whitespace/newlines that often sneak into env values, and keep
+  // only valid model-name characters.
+  const clean = (s: string) => s.replace(/["'\s]/g, "");
+  const valid = (m: string) => /^[a-zA-Z0-9][a-zA-Z0-9.\-]*$/.test(m);
+  const primary = clean(process.env.GEMINI_MODEL || "gemini-3.8-flash");
+  const envList = (process.env.GEMINI_MODELS || "").split(",").map(clean).filter(Boolean);
+  const chain = (envList.length ? envList : [primary, "gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-pro"])
+    .filter(valid)
+    .filter((m, i, a) => a.indexOf(m) === i);
+  if (!chain.length) return NextResponse.json({ error: "有効なモデル名がありません（GEMINI_MODELS を確認してください）" }, { status: 500 });
 
   try {
     const { imageUrl, prompt } = await req.json();
@@ -33,17 +45,41 @@ export async function POST(req: NextRequest) {
       generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
     };
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!r.ok) {
-      const t = await r.text().catch(() => "");
-      return NextResponse.json({ error: "gemini_error", detail: t.slice(0, 300) }, { status: 502 });
+    // Try each model, retrying on overload (429/5xx) up to 10 total attempts,
+    // and stepping down to the next model on 404/overload.
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    let data: any = null;
+    let usedModel = "";
+    let lastErr = "";
+    let attempts = 0;
+    outer:
+    for (const m of chain) {
+      for (let t = 0; t < 2 && attempts < 10; t++, attempts++) {
+        let r: Response;
+        try {
+          r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+          });
+        } catch (netErr: any) {
+          lastErr = `${m}: network ${netErr?.message || ""}`;
+          await sleep(Math.min(4000, 400 * 2 ** t));
+          continue;
+        }
+        if (r.ok) { data = await r.json(); usedModel = m; break outer; }
+        const detail = (await r.text().catch(() => "")).slice(0, 200);
+        lastErr = `${m}: ${r.status} ${detail}`;
+        // model gone (404) or bad model-name format (400) -> skip to next model
+        if (r.status === 404 || r.status === 400) break;
+        if (r.status === 401 || r.status === 403) {
+          return NextResponse.json({ error: "APIキーが無効か権限がありません", detail: lastErr }, { status: 502 });
+        }
+        // 429 / 500 / 503 (overload) -> back off, then retry same model
+        await sleep(Math.min(4000, 500 * 2 ** t));
+      }
     }
-    const data = await r.json();
+    if (!data) {
+      return NextResponse.json({ error: "生成できませんでした（混雑／モデル名をご確認ください）", detail: lastErr, tried: chain }, { status: 503 });
+    }
     const text: string = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") || "";
     const parsed = safeJson(text);
     if (!parsed) return NextResponse.json({ error: "parse_failed", raw: text.slice(0, 300) }, { status: 502 });
@@ -52,6 +88,7 @@ export async function POST(req: NextRequest) {
     const ja = parsed.ja || {};
     const en = parsed.en || {};
     return NextResponse.json({
+      _model: usedModel,
       startDate: str(parsed.startDate, 10),
       deadlineDate: str(parsed.deadlineDate, 10),
       dateLabel: str(parsed.dateLabel, 60),
