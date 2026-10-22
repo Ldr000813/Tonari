@@ -43,6 +43,8 @@ npm run dev     # http://localhost:3000
 |---|---|
 | `ADMIN_PASSWORD` | 管理ログインのパスワード（自由に設定） |
 | `BLOB_READ_WRITE_TOKEN` | 画像保存用。Vercel で Blob ストアを作成し、このプロジェクトに接続すると**自動で追加**されます |
+| `GEMINI_API_KEY` | イベント追加の「✨AIで自動入力」用。[Google AI Studio](https://aistudio.google.com/apikey) で無料のAPIキーを取得して設定 |
+| `GEMINI_MODEL`（任意） | 使うモデル名。未設定なら `gemini-2.0-flash` |
 
 ### Vercel Blob ストアの作り方
 

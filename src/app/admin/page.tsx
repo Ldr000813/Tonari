@@ -323,11 +323,32 @@ function EventsPanel({ pw }: { pw: string }) {
     setEvents((arr) => arr.map((e) => (e.id === id ? mergeEv(e, patch) : e)));
   }
 
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  async function runAI() {
+    if (!draft.image) { setMsg("先にイベント画像をアップロードしてください。"); return; }
+    setAiBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/admin/event-ai", { method: "POST", headers, body: JSON.stringify({ imageUrl: draft.image, prompt: aiPrompt }) });
+      if (!r.ok) { setMsg("AI自動入力に失敗しました：" + ((await r.json().catch(() => ({}))).error || r.status)); return; }
+      const d = await r.json();
+      setDraft((prev) => mergeEv(prev, {
+        ...(d.startDate ? { startDate: d.startDate } : {}),
+        ...(d.deadlineDate ? { deadlineDate: d.deadlineDate } : {}),
+        ...(d.dateLabel != null ? { date: d.dateLabel } : {}),
+        ...(d.deadlineLabel != null ? { deadline: d.deadlineLabel } : {}),
+        ja: d.ja || {}, en: d.en || {},
+      }));
+      setMsg("AIが入力しました。内容を確認・修正して「追加する」を押してください。");
+    } finally { setAiBusy(false); }
+  }
+
   return (
     <div>
       <div className="card mb-6">
         <p className="font-bold text-ink mb-3">イベントを追加</p>
-        <EvFields ev={draft} pw={pw} onChange={(patch) => setDraft((d) => mergeEv(d, patch))} />
+        <EvFields ev={draft} pw={pw} onChange={(patch) => setDraft((d) => mergeEv(d, patch))}
+          ai={{ prompt: aiPrompt, setPrompt: setAiPrompt, run: runAI, busy: aiBusy }} />
         <button onClick={add} disabled={busy} className="btn btn-primary text-sm py-2 mt-3">追加する</button>
       </div>
 
@@ -383,7 +404,8 @@ function mergeEv(e: Ev, patch: any): Ev {
   };
 }
 
-function EvFields({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (patch: any) => void }) {
+type AiProps = { prompt: string; setPrompt: (s: string) => void; run: () => void; busy: boolean };
+function EvFields({ ev, pw, onChange, ai }: { ev: Ev; pw: string; onChange: (patch: any) => void; ai?: AiProps }) {
   const inp = "w-full border border-line rounded-lg p-2 text-sm";
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -431,6 +453,24 @@ function EvFields({ ev, pw, onChange }: { ev: Ev; pw: string; onChange: (patch: 
           </div>
         </div>
       </div>
+
+      {/* AI auto-fill (add form only) */}
+      {ai && (
+        <div className="rounded-xl border border-teal/40 bg-mint/40 p-3 space-y-2">
+          <label className="text-xs font-extrabold text-teal">✨ AIで自動入力（画像＋指示から、下の項目をまとめて生成）</label>
+          <textarea className={inp} rows={2}
+            placeholder="例：より多くの人が参加したくなるように、親しみやすく。留学生にも伝わるように。"
+            value={ai.prompt} onChange={(e) => ai.setPrompt(e.target.value)} />
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={ai.run} disabled={ai.busy || !ev.image}
+              className="btn btn-primary text-sm py-2 disabled:opacity-50">
+              {ai.busy ? "AIが作成中…" : "画像＋指示からAIで自動入力"}
+            </button>
+            {!ev.image && <span className="text-[11px] text-[#8a8378]">先に画像をアップロードしてください</span>}
+          </div>
+          <p className="text-[11px] text-[#8a8378]">※ 生成後は内容を必ず確認・修正してください。日時や場所は画像から読み取ります。</p>
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-3">
         <div>
