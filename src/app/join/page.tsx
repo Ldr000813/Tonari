@@ -24,8 +24,21 @@ export default function Join() {
       .catch(() => {});
   }, []);
 
+  const leftPhotos = photos;
+  const rightPhotos = [...photos].reverse();
+
   return (
-    <section className="section">
+    <section className="max-w-6xl mx-auto px-5 py-10 sm:py-14">
+      <div className="relative">
+        {/* side photo columns (desktop) — flip in on scroll */}
+        <div className="hidden lg:block absolute left-0 top-24 w-44 xl:w-52">
+          <FlipGallery images={leftPhotos} small />
+        </div>
+        <div className="hidden lg:block absolute right-0 top-40 w-44 xl:w-52">
+          <FlipGallery images={rightPhotos} small />
+        </div>
+
+        <div className="max-w-xl mx-auto">
       <h1 className="text-3xl sm:text-4xl font-black text-ink text-center">
         <Bi ja="参加する" en="Join Tonari" />
       </h1>
@@ -45,8 +58,8 @@ export default function Join() {
         ))}
       </div>
 
-      {/* past events — cards flip in as you scroll toward the join button */}
-      <div className="mt-16 max-w-xl mx-auto">
+      {/* past events — mobile shows a centered flip gallery (desktop uses the side columns) */}
+      <div className="mt-16 max-w-xl mx-auto lg:hidden">
         <h2 className="text-xl sm:text-2xl font-extrabold text-ink text-center">
           <Bi ja="これまでの、となり" en="Moments from Tonari" />
         </h2>
@@ -83,9 +96,23 @@ export default function Join() {
         </a>
 
         {LINKS.instagram && (
-          <a href={LINKS.instagram} target="_blank" rel="noreferrer" className="inline-block mt-3 text-sm text-teal underline">
-            📷 Instagram
-          </a>
+          <div className="mt-4">
+            <p className="text-xs text-[#a29a8c] mb-2"><Bi ja="ふだんの様子はこちら" en="See what we're up to" /></p>
+            <a
+              href={LINKS.instagram}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white shadow active:scale-95"
+              style={{ background: "linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+              </svg>
+              Instagram
+            </a>
+          </div>
         )}
         {LINKS.contactEmail && (
           <p className="text-sm text-[#8a8378] mt-3">
@@ -93,6 +120,8 @@ export default function Join() {
             <a href={`mailto:${LINKS.contactEmail}`} className="text-teal underline">{LINKS.contactEmail}</a>
           </p>
         )}
+      </div>
+        </div>
       </div>
     </section>
   );

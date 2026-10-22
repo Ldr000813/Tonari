@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 
 // 過去イベントの写真を、スクロール位置に連動して「カードをめくる」ように回転させる。
 // JSが動かない環境では、ふつうの写真リストとして表示される（段階的強化）。
-export default function FlipGallery({ images }: { images: string[] }) {
+export default function FlipGallery({ images, small = false }: { images: string[]; small?: boolean }) {
   const refs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -40,16 +40,16 @@ export default function FlipGallery({ images }: { images: string[] }) {
   }, [images.length]);
 
   return (
-    <div className="space-y-6" style={{ perspective: "1100px" }}>
+    <div className={small ? "space-y-4" : "space-y-6"} style={{ perspective: "1100px" }}>
       {images.map((src, i) => (
         <div
           key={i}
           ref={(el) => { refs.current[i] = el; }}
-          className="rounded-3xl overflow-hidden shadow-xl border border-line bg-white"
+          className={"rounded-2xl overflow-hidden border border-line bg-white " + (small ? "shadow-lg" : "shadow-xl")}
           style={{ transformOrigin: "center bottom", willChange: "transform, opacity" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="" className="w-full h-56 sm:h-64 object-cover" loading="lazy" />
+          <img src={src} alt="" className={"w-full object-cover " + (small ? "h-40" : "h-56 sm:h-64")} loading="lazy" />
         </div>
       ))}
     </div>

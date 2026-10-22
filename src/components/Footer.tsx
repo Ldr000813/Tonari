@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto px-5 py-12 text-center">
         <div className="font-black text-2xl tracking-wide text-ink">となり <span className="text-sm tracking-[0.25em] text-[#a29a8c]">TONARI</span></div>
         <p className="text-sm text-[#8a8378] mt-2">
-          <Bi ja="地域に根ざす多文化共生コミュニティ。京田辺市から。" en="A multicultural community rooted in Kyotanabe." />
+          <Bi ja="同志社大学の学生が立ち上げた、多文化交流コミュニティ。京田辺から。" en="A multicultural community started by Doshisha University students, from Kyotanabe." />
         </p>
 
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6 text-sm font-bold text-ink/80">
