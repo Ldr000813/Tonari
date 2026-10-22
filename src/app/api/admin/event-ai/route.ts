@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) return NextResponse.json({ error: "GEMINI_API_KEY が未設定です" }, { status: 500 });
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
   try {
     const { imageUrl, prompt } = await req.json();
