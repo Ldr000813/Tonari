@@ -325,13 +325,17 @@ function EventsPanel({ pw }: { pw: string }) {
 
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState("");
   async function runAI() {
-    if (!draft.image) { setMsg("先にイベント画像をアップロードしてください。"); return; }
-    setAiBusy(true); setMsg("");
+    if (!draft.image) { setAiMsg("先にイベント画像をアップロードしてください。"); return; }
+    setAiBusy(true); setAiMsg("AIが画像を読み取っています…");
     try {
       const r = await fetch("/api/admin/event-ai", { method: "POST", headers, body: JSON.stringify({ imageUrl: draft.image, prompt: aiPrompt }) });
-      if (!r.ok) { setMsg("AI自動入力に失敗しました：" + ((await r.json().catch(() => ({}))).error || r.status)); return; }
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setAiMsg("AI自動入力に失敗しました：" + (d.error || r.status) + (d.detail ? `（${d.detail}）` : ""));
+        return;
+      }
       setDraft((prev) => mergeEv(prev, {
         ...(d.startDate ? { startDate: d.startDate } : {}),
         ...(d.deadlineDate ? { deadlineDate: d.deadlineDate } : {}),
@@ -339,7 +343,9 @@ function EventsPanel({ pw }: { pw: string }) {
         ...(d.deadlineLabel != null ? { deadline: d.deadlineLabel } : {}),
         ja: d.ja || {}, en: d.en || {},
       }));
-      setMsg("AIが入力しました。内容を確認・修正して「追加する」を押してください。");
+      setAiMsg("✅ AIが入力しました。下の各項目を確認・修正して「追加する」を押してください。");
+    } catch (e: any) {
+      setAiMsg("通信に失敗しました：" + (e?.message || "unknown"));
     } finally { setAiBusy(false); }
   }
 
@@ -348,7 +354,7 @@ function EventsPanel({ pw }: { pw: string }) {
       <div className="card mb-6">
         <p className="font-bold text-ink mb-3">イベントを追加</p>
         <EvFields ev={draft} pw={pw} onChange={(patch) => setDraft((d) => mergeEv(d, patch))}
-          ai={{ prompt: aiPrompt, setPrompt: setAiPrompt, run: runAI, busy: aiBusy }} />
+          ai={{ prompt: aiPrompt, setPrompt: setAiPrompt, run: runAI, busy: aiBusy, msg: aiMsg }} />
         <button onClick={add} disabled={busy} className="btn btn-primary text-sm py-2 mt-3">追加する</button>
       </div>
 
@@ -404,7 +410,7 @@ function mergeEv(e: Ev, patch: any): Ev {
   };
 }
 
-type AiProps = { prompt: string; setPrompt: (s: string) => void; run: () => void; busy: boolean };
+type AiProps = { prompt: string; setPrompt: (s: string) => void; run: () => void; busy: boolean; msg?: string };
 function EvFields({ ev, pw, onChange, ai }: { ev: Ev; pw: string; onChange: (patch: any) => void; ai?: AiProps }) {
   const inp = "w-full border border-line rounded-lg p-2 text-sm";
   const [uploading, setUploading] = useState(false);
@@ -468,6 +474,7 @@ function EvFields({ ev, pw, onChange, ai }: { ev: Ev; pw: string; onChange: (pat
             </button>
             {!ev.image && <span className="text-[11px] text-[#8a8378]">先に画像をアップロードしてください</span>}
           </div>
+          {ai.msg && <p className="text-xs font-semibold text-teal">{ai.msg}</p>}
           <p className="text-[11px] text-[#8a8378]">※ 生成後は内容を必ず確認・修正してください。日時や場所は画像から読み取ります。</p>
         </div>
       )}
