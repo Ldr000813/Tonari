@@ -1,4 +1,5 @@
 import { list, put, del } from "@vercel/blob";
+import { unstable_cache } from "next/cache";
 
 // かんたん匿名日程調整。Vercel Blob に JSON として保存（DB不要・使い捨て）。
 // 投票は 1 件 1 ファイルにするので、同時投票でも取りこぼしません。
@@ -66,6 +67,20 @@ export async function getResponses(id: string): Promise<Resp[]> {
   const { blobs } = await list({ prefix: `polls/${id}/r/` });
   const out = await Promise.all(blobs.map((b) => readJson<Resp>(b.url)));
   return (out.filter(Boolean) as Resp[]).sort((a, b) => a.at - b.at);
+}
+
+// 公開の投票ページ用（キャッシュ）。投票/編集時は revalidateTag(`poll-<id>`) で更新。
+export function getPollView(id: string) {
+  return unstable_cache(
+    async () => {
+      const poll = await getPollMeta(id);
+      if (!poll) return null;
+      const responses = await getResponses(id);
+      return { poll, responses };
+    },
+    ["poll-view", id],
+    { tags: [`poll-${id}`], revalidate: 30 }
+  )();
 }
 
 export async function addResponse(id: string, resp: { name: string; picks: Record<string, Pick> }): Promise<void> {

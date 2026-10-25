@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put, del } from "@vercel/blob";
+import { revalidateTag } from "next/cache";
 import { isAdmin } from "@/lib/adminAuth";
 import { readPositions, writePositions, listHero, clampPos } from "@/lib/heroStore";
 
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
     if (!file.type.startsWith("image/")) return NextResponse.json({ error: "not_image" }, { status: 400 });
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const blob = await put(`hero/${Date.now()}-${safe}`, file, { access: "public" });
+    revalidateTag("hero");
     return NextResponse.json({ ok: true, url: blob.url });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "upload_failed" }, { status: 500 });
@@ -51,6 +53,7 @@ export async function PATCH(req: NextRequest) {
     const map = await readPositions();
     map[pathname] = clampPos(x, y);
     await writePositions(map);
+    revalidateTag("hero");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "save_failed" }, { status: 500 });
@@ -71,6 +74,7 @@ export async function DELETE(req: NextRequest) {
         if (map[pathname]) { delete map[pathname]; await writePositions(map); }
       } catch {}
     }
+    revalidateTag("hero");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "delete_failed" }, { status: 500 });

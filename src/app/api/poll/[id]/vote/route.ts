@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getPollMeta, addResponse, Pick } from "@/lib/pollStore";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
     const name = String(body?.name ?? "").trim().slice(0, 40) || "匿名";
     await addResponse(params.id, { name, picks });
+    revalidateTag(`poll-${params.id}`);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "vote_failed" }, { status: 500 });

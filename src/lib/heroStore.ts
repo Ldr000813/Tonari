@@ -1,4 +1,5 @@
 import { list, put } from "@vercel/blob";
+import { unstable_cache } from "next/cache";
 
 // Per-image focal point (object-position), stored as a single JSON blob keyed by
 // the image's pathname. Kept under a separate prefix so it never shows up as a
@@ -38,3 +39,18 @@ export async function listHero() {
   const { blobs } = await list({ prefix: "hero/" });
   return blobs.sort((a, b) => a.pathname.localeCompare(b.pathname));
 }
+
+// 公開ページ用（キャッシュ）。list() はキャッシュ有効期間に1回だけ走る。
+// 管理画面で写真/位置を更新したら revalidateTag("hero") で即時更新。
+export const getHeroPublic = unstable_cache(
+  async () => {
+    const blobs = await listHero();
+    const pos = await readPositions();
+    return blobs.map((b) => {
+      const p = pos[b.pathname] || { x: 50, y: 50 };
+      return { url: b.url, pos: `${p.x}% ${p.y}%` };
+    });
+  },
+  ["hero-public"],
+  { tags: ["hero"], revalidate: 600 }
+);

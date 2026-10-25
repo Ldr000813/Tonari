@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdmin } from "@/lib/adminAuth";
-import { getPollMeta, getResponses, deletePoll, updatePoll } from "@/lib/pollStore";
+import { revalidateTag } from "next/cache";
+import { getPollView, deletePoll, updatePoll } from "@/lib/pollStore";
 
 export const dynamic = "force-dynamic";
 
-// GET: public — poll meta + all responses (for the shared voting page)
+// GET: public — poll meta + all responses (cached; voting invalidates it)
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const poll = await getPollMeta(params.id);
-  if (!poll) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const responses = await getResponses(params.id);
-  return NextResponse.json({ poll, responses });
+  const data = await getPollView(params.id);
+  if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  return NextResponse.json(data);
 }
 
 // PATCH: admin — 中止/再開 や 内容の編集（タイトル・説明・候補日）
@@ -26,6 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if ("dates" in fields && !fields.dates.length) return NextResponse.json({ error: "dates_required" }, { status: 400 });
     const updated = await updatePoll(params.id, fields);
     if (!updated) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    revalidateTag(`poll-${params.id}`);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "update_failed" }, { status: 500 });
@@ -37,6 +38,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     await deletePoll(params.id);
+    revalidateTag(`poll-${params.id}`);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "delete_failed" }, { status: 500 });

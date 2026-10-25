@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put, del } from "@vercel/blob";
+import { revalidateTag } from "next/cache";
 import { isAdmin } from "@/lib/adminAuth";
 import { listByPrefix } from "@/lib/siteStore";
 
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
     if (!file.type.startsWith("image/")) return NextResponse.json({ error: "not_image" }, { status: 400 });
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const blob = await put(`gallery/${Date.now()}-${safe}`, file, { access: "public" });
+    revalidateTag("gallery");
     return NextResponse.json({ ok: true, url: blob.url });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "upload_failed" }, { status: 500 });
@@ -40,6 +42,7 @@ export async function DELETE(req: NextRequest) {
   if (!url) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   try {
     await del(url);
+    revalidateTag("gallery");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "delete_failed" }, { status: 500 });

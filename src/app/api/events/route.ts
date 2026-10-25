@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readEvents } from "@/lib/siteStore";
+import { getEventsCached } from "@/lib/siteStore";
 import { evStatus } from "@/lib/eventStatus";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const now = new Date();
-    const events = (await readEvents())
+    const events = (await getEventsCached())
       .filter((e) => !e.paused)
       .map((e) => ({ e, s: evStatus(e, now) }))
       .filter(({ s }) => !s.hidden)

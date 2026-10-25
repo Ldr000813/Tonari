@@ -1,4 +1,5 @@
 import { list, put } from "@vercel/blob";
+import { unstable_cache } from "next/cache";
 
 // ---- Generic image listing (used by gallery) ----
 export async function listByPrefix(prefix: string) {
@@ -6,6 +7,14 @@ export async function listByPrefix(prefix: string) {
   // newest first (pathname starts with Date.now())
   return blobs.sort((a, b) => b.pathname.localeCompare(a.pathname));
 }
+
+// 公開ページ用（キャッシュ）。list()/読み込みは有効期間に1回だけ。
+// 管理画面で更新時は revalidateTag("gallery") / "events" で即時更新。
+export const getGalleryCached = unstable_cache(
+  async () => (await listByPrefix("gallery/")).map((b) => ({ url: b.url, pathname: b.pathname })),
+  ["gallery-public"],
+  { tags: ["gallery"], revalidate: 600 }
+);
 
 // ---- Events (stored as a single JSON blob) ----
 const EVENTS_PATH = "site-meta/events.json";
@@ -68,3 +77,10 @@ export async function writeEvents(events: Ev[]): Promise<void> {
 export function newId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
+
+// 公開ページ用（キャッシュ）。時刻依存の締切判定は呼び出し側で行う。
+export const getEventsCached = unstable_cache(
+  async () => readEvents(),
+  ["events-public"],
+  { tags: ["events"], revalidate: 300 }
+);

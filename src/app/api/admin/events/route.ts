@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { del } from "@vercel/blob";
+import { revalidateTag } from "next/cache";
 import { isAdmin } from "@/lib/adminAuth";
 import { readEvents, writeEvents, newId, Ev } from "@/lib/siteStore";
 
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
     const events = await readEvents();
     events.unshift(ev);
     await writeEvents(events);
+    revalidateTag("events");
     return NextResponse.json({ ok: true, event: ev });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "save_failed" }, { status: 500 });
@@ -80,6 +82,7 @@ export async function PATCH(req: NextRequest) {
       en: sanitizeText(body?.en),
     };
     await writeEvents(events);
+    revalidateTag("events");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "save_failed" }, { status: 500 });
@@ -96,6 +99,7 @@ export async function DELETE(req: NextRequest) {
     const target = events.find((e) => e.id === id);
     const next = events.filter((e) => e.id !== id);
     await writeEvents(next);
+    revalidateTag("events");
     for (const u of [target?.image, target?.displayImage]) { if (u) { try { await del(u); } catch {} } }
     return NextResponse.json({ ok: true });
   } catch (e: any) {
