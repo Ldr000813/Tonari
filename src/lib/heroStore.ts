@@ -52,5 +52,5 @@ export const getHeroPublic = unstable_cache(
     });
   },
   ["hero-public"],
-  { tags: ["hero"], revalidate: 600 }
+  { tags: ["hero"], revalidate: false } // 時間では更新しない。管理者が変更したときだけ作り直す。
 );

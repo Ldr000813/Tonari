@@ -13,7 +13,7 @@ export async function listByPrefix(prefix: string) {
 export const getGalleryCached = unstable_cache(
   async () => (await listByPrefix("gallery/")).map((b) => ({ url: b.url, pathname: b.pathname })),
   ["gallery-public"],
-  { tags: ["gallery"], revalidate: 600 }
+  { tags: ["gallery"], revalidate: false }
 );
 
 // ---- Events (stored as a single JSON blob) ----
@@ -82,5 +82,5 @@ export function newId(): string {
 export const getEventsCached = unstable_cache(
   async () => readEvents(),
   ["events-public"],
-  { tags: ["events"], revalidate: 300 }
+  { tags: ["events"], revalidate: false }
 );

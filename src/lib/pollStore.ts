@@ -79,7 +79,7 @@ export function getPollView(id: string) {
       return { poll, responses };
     },
     ["poll-view", id],
-    { tags: [`poll-${id}`], revalidate: 30 }
+    { tags: [`poll-${id}`], revalidate: false } // 投票/編集のときだけ作り直す
   )();
 }
 
